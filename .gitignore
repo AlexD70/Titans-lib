@@ -7,5 +7,6 @@ build
 *.class
 bin/
 upgrade/
+.idea/
 
 __pycache__/
