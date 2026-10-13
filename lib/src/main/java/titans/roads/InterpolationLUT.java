@@ -14,7 +14,7 @@ public class InterpolationLUT {
     public ArrayList<KinematicStateXY> values;
 
     public int first = 0, second = 1;
-    public double eps = 0.001;
+    public double eps = 0.0001;
     public int maxIter = 3;
 
     public KinematicStateXY getStateAt(double t){
@@ -44,6 +44,7 @@ public class InterpolationLUT {
             } else {
                 first += 1;
                 second += 1;
+                iter += 1;
                 time1 = keys.get(first);
                 time2 = keys.get(second);
             }
@@ -51,6 +52,10 @@ public class InterpolationLUT {
 
         // throw error if the correct value cannot be found in 4 iterations
         throw new RuntimeException("Interpolation LUT crashed at runtime. Iteration number exceeds maxIter.");
+    }
+
+    public double getEndTime(){
+        return keys.getLast();
     }
 
     // should not be used by the user

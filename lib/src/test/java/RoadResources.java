@@ -1,5 +1,5 @@
 import titans.geometry.Point2d;
-import titans.roads.Spline;
+import titans.math.Spline;
 
 public class RoadResources {
     public static class MathTests {

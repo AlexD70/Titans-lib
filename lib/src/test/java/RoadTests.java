@@ -1,11 +1,10 @@
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import titans.algebra.NPoly;
+import titans.math.NPoly;
 import titans.geometry.Point2d;
 import titans.roads.Road;
-import titans.roads.Spline;
+import titans.math.Spline;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import org.apache.commons.math3.util.Pair;
@@ -26,8 +25,8 @@ public class RoadTests {
     public Road road = new Road();
 
     public void buildTestRoad() {
-        Spline c1 = Spline.getNullSpline();
-        Spline c2 = Spline.getNullSpline();
+        Spline c1 = new Spline();
+        Spline c2 = new Spline();
 
         assertDoesNotThrow(() -> c1.setSpline(c1x, c1y, new Point2d(c1x.apply(0), c1y.apply(0))));
         assertDoesNotThrow(() -> c2.setSpline(c2x, c2y, new Point2d(c2x.apply(0), c2y.apply(0))));
@@ -40,14 +39,14 @@ public class RoadTests {
     void checkCurveLen(){
         buildTestRoad();
 
-        System.out.println(road.getSegmentAtDisplacement(0).getFirst().displacementAt(1));
+        System.out.println(road.getSegment2Disp(0).getFirst().dispAt(1));
 
-        Pair<Spline, Double> output = road.getSegmentAtDisplacement(2);
+        Pair<Spline, Double> output = road.getSegment2Disp(2);
         System.out.println(Arrays.toString(output.getFirst().getXCoeffs()));
         System.out.println(Arrays.toString(output.getFirst().getYCoeffs()));
         System.out.println(output.getSecond());
 
-        Point2d point = road.pointAtDisplacement(1);
+        Point2d point = road.pointAtDisp(1);
         System.out.printf("(%f, %f)%n", point.getX(), point.getY());
     }
 }

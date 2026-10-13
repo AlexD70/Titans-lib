@@ -16,10 +16,10 @@ public class RoadDrawTest {
     void showTestRoad() throws IOException, InterruptedException {
         RoadBuilder builder = new RoadBuilder(new Point2d(2, 2), 0, 0);
         Road road = builder
-                .splineToPoint(new Point2d(30, 45), -Math.PI/2)
-                .lineToPoint(new Point2d(30, 40))
-                .splineToPointKeepTangent(new Point2d(40, 30))
-                .splineToPoint(new Point2d(50, 50), Math.PI/2)
+                .splineConstHeading(new Point2d(30, 45), -Math.PI/2)
+                .lineConstHeading(new Point2d(30, 40))
+                .splineConstHeading(new Point2d(40, 30))
+                .splineConstHeading(new Point2d(50, 50), Math.PI/2)
                 .build();
 
         drawRoad(road, 0.1);
@@ -29,10 +29,10 @@ public class RoadDrawTest {
     void showTestMotionProfile() throws IOException, InterruptedException {
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0);
         Road road = builder
-                .splineToPoint(new Point2d(3, 3), Math.PI / 2)
-                .splineToPointKeepTangent(new Point2d(10, 10))
-                .lineToPoint(new Point2d(4, 5))
-                .lineToPoint(new Point2d(4, 0)).build();
+                .splineConstHeading(new Point2d(3, 3), Math.PI / 2)
+                .splineConstHeading(new Point2d(10, 10))
+                .lineConstHeading(new Point2d(4, 5))
+                .lineConstHeading(new Point2d(4, 0)).build();
         ConstraintSetXY constr = new ConstraintSetXY(3.65, 2, 3.6, 1);
         drawRoad(road, 0.1);
 
@@ -80,7 +80,7 @@ public class RoadDrawTest {
 
         double disp = 0;
         while(disp <= road.getLength()){
-            Point2d p = road.pointAtDisplacement(disp);
+            Point2d p = road.pointAtDisp(disp);
             jsonifier.array().value(p.getX()).value(p.getY()).endArray();
             disp += res;
         }
@@ -97,4 +97,6 @@ public class RoadDrawTest {
 
         assertEquals(0, proc.exitValue());
     }
+
+
 }

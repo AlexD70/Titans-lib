@@ -5,10 +5,9 @@ import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 import titans.roads.Road;
 import titans.roads.RoadBuilder;
-import titans.roads.Spline;
+import titans.math.Spline;
 
 import java.lang.reflect.Field;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class RoadBuilderTests {
     static Point2d[] points = new Point2d[4];
@@ -46,17 +45,17 @@ public class RoadBuilderTests {
         RoadBuilder builder = new RoadBuilder(new Point2d(0, 0), tangents[0], 0);
         if(keepTangents){
             return builder
-                    .splineToPointKeepTangent(points[0])
-                    .splineToPointKeepTangent(points[1])
-                    .splineToPointKeepTangent(points[2])
-                    .splineToPointKeepTangent(points[3])
+                    .splineConstHeading(points[0])
+                    .splineConstHeading(points[1])
+                    .splineConstHeading(points[2])
+                    .splineConstHeading(points[3])
                     .build();
         } else {
             return builder
-                    .splineToPoint(points[0], tangents[1])
-                    .splineToPoint(points[1], tangents[2])
-                    .splineToPoint(points[2], tangents[3])
-                    .splineToPoint(points[3], tangents[4])
+                    .splineConstHeading(points[0], tangents[1])
+                    .splineConstHeading(points[1], tangents[2])
+                    .splineConstHeading(points[2], tangents[3])
+                    .splineConstHeading(points[3], tangents[4])
                     .build();
         }
     }
@@ -86,18 +85,18 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegmentAtDisplacement(arr1[i]);
+            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
-            assertPointsEqual(points[i], s.pointAtDisplacement(reldisp));
+            assertPointsEqual(points[i], s.pointAtDisp(reldisp));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegmentAtDisplacement(arr2[i]);
+            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
-            assertPointsEqual(points[i], s.pointAtDisplacement(reldisp));
+            assertPointsEqual(points[i], s.pointAtDisp(reldisp));
         }
     }
 
@@ -130,19 +129,19 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegmentAtDisplacement(arr1[i]);
+            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
-            MathTests.assertWithinError(Math.abs(tangents[0]), s.tangentAt(s.uAtDisplacement(reldisp)));
+            MathTests.assertWithinError(Math.abs(tangents[0]), s.tanAt(s.uAtDisp(reldisp)));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegmentAtDisplacement(arr2[i]);
+            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
 
-            MathTests.assertWithinError(Math.abs(tangents[i + 1]), s.tangentAt(s.uAtDisplacement(reldisp)));
+            MathTests.assertWithinError(Math.abs(tangents[i + 1]), s.tanAt(s.uAtDisp(reldisp)));
         }
     }
 
@@ -171,18 +170,18 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegmentAtDisplacement(arr1[i]);
+            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
-            assertPointsEqual(new Point2d(0, 0), s.secondDerivativeAt(1));
+            assertPointsEqual(new Point2d(0, 0), s.deriv2ndAt(1));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegmentAtDisplacement(arr2[i]);
+            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
             Spline s = res.getFirst();
             Double reldisp = res.getSecond();
-            assertPointsEqual(new Point2d(0, 0), s.secondDerivativeAt(1));
+            assertPointsEqual(new Point2d(0, 0), s.deriv2ndAt(1));
         }
     }
 
@@ -191,7 +190,7 @@ public class RoadBuilderTests {
         Road r1 = generateTestRoad(false);
 
         Vector2d deriv;
-        Point2d derivp = r1.getDerivAtDisplacement(0);
+        Point2d derivp = r1.getDerivAtDisp(0);
         if(derivp == null){
             throw new RuntimeException("Test checkRoadStartTangent failed! Null Pointer Exception caught...");
         } else {
@@ -218,10 +217,10 @@ public class RoadBuilderTests {
             assertPointsEqual(s1.pointAt(1), s2.pointAt(0));
 
             // check tangents at joints
-            assertPointsEqual(s1.tangentVectorAt(1).toPoint(), s2.tangentVectorAt(0).toPoint());
+            assertPointsEqual(s1.tanVecAt(1).toPoint(), s2.tanVecAt(0).toPoint());
 
             // check 2nd derivs at joints
-            assertPointsEqual(s1.secondDerivativeAt(1), s2.secondDerivativeAt(0));
+            assertPointsEqual(s1.deriv2ndAt(1), s2.deriv2ndAt(0));
         }
 
 
@@ -233,10 +232,10 @@ public class RoadBuilderTests {
             assertPointsEqual(s1.pointAt(1), s2.pointAt(0));
 
             // check tangents at joints
-            assertPointsEqual(s1.tangentVectorAt(1).toPoint(), s2.tangentVectorAt(0).toPoint());
+            assertPointsEqual(s1.tanVecAt(1).toPoint(), s2.tanVecAt(0).toPoint());
 
             // check 2nd derivs at joints
-            assertPointsEqual(s1.secondDerivativeAt(1), s2.secondDerivativeAt(0));
+            assertPointsEqual(s1.deriv2ndAt(1), s2.deriv2ndAt(0));
         }
     }
 

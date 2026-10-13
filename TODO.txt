@@ -1,0 +1,6 @@
+add javadocs to as many classes as possible
+refactor monoliths and fix design problems and inconsistencies
+check and fix interpolation LUTs
+fix errors
+fix/remove/update unit tests
+implement heading interpolation

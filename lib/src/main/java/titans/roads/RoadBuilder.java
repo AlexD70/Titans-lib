@@ -1,11 +1,11 @@
 package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
-import titans.algebra.NPoly;
+import titans.math.NPoly;
 import titans.geometry.Line2d;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
-import titans.util.NullSplineErr;
+import titans.math.Spline;
 import titans.util.Unimplemented;
 
 import javax.annotation.Nonnull;
@@ -16,6 +16,8 @@ public class RoadBuilder {
     private Point2d startPoint;
     private double startDeriv;
     private double start2ndDeriv;
+    private double startAng = 0; // this means 1i + 0j
+    private double lastAngDeriv = 0;
     private Road road = new Road();
     private double eps  = 0.001;
 
@@ -25,19 +27,26 @@ public class RoadBuilder {
         this.start2ndDeriv = start2ndDeriv;
     }
 
+    public RoadBuilder(Point2d startPoint, double startDeriv, double start2ndDeriv, double startAng) {
+        this.startPoint = startPoint;
+        this.startDeriv = startDeriv;
+        this.start2ndDeriv = start2ndDeriv;
+        this.startAng = startAng;
+    }
+
     @SuppressWarnings("unused")
-    public RoadBuilder goLeftRight(double howmuch){
+    public RoadBuilder strafe(double howmuch){
         return goByDirections(howmuch, 0);
     }
 
     @SuppressWarnings("unused")
-    public RoadBuilder goForwardBackward(double howmuch){
+    public RoadBuilder forward(double howmuch){
         return goByDirections(0, howmuch);
     }
 
     @SuppressWarnings("unused")
     public RoadBuilder goByDirections(double leftRight, double forwardBackward){
-        return lineToPoint(new Point2d(prevPoint.getX() + leftRight, prevPoint.getY() + forwardBackward));
+        return lineConstHeading(new Point2d(prevPoint.getX() + leftRight, prevPoint.getY() + forwardBackward));
     }
 
     // the original heuristic uses 1/2 * lastDist for the last spline, however the usage
@@ -54,9 +63,29 @@ public class RoadBuilder {
         return Vector2d.fromPolar(r, startTangent);
     }
 
+    @SuppressWarnings("unused")
+    public RoadBuilder line(Point2d endPoint){
+        return this.lineConstHeading(endPoint);
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder spline(Point2d endPoint){
+        return this.splineConstHeading(endPoint);
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder turn(double endAngle){
+        HeadingInterpolation rotation = HeadingInterpolation.fromAngles(
+                Vector2d.fromPolar(1, startAng), endAngle - startAng, 0, 0, true
+        );
+        startAng = endAngle;
+        road.addSplineWithHeadingInterp(new Spline(), false, rotation);
+        return this;
+    }
+
     // line parameterization
     @SuppressWarnings("unused")
-    public RoadBuilder lineToPoint(Point2d endPoint){
+    public RoadBuilder lineConstHeading(Point2d endPoint){
         Vector2d v = endPoint.toVector().diff(startPoint.toVector());
         double[] xcoeffs = new double[] {0, 0, 0, 0, v.getX(), startPoint.getX()};
         double[] ycoeffs = new double[] {0, 0, 0, 0, v.getY(), startPoint.getY()};
@@ -65,9 +94,8 @@ public class RoadBuilder {
         NPoly xpoly = new NPoly(5), ypoly =  new NPoly(5);
         xpoly.assignCoefficients(xcoeffs);
         ypoly.assignCoefficients(ycoeffs);
-        s.xpoly = xpoly;
-        s.ypoly = ypoly;
-        s.length = v.abs();
+        s.setSpline(xpoly, ypoly, prevPoint);
+        s.unsetNull();
         try {
             s.unsetNull();
         } catch (Exception e){
@@ -87,11 +115,11 @@ public class RoadBuilder {
     }
 
     @SuppressWarnings("unused")
-    public RoadBuilder splineToPointKeepTangent(Point2d endPoint){
+    public RoadBuilder splineConstHeading(Point2d endPoint){
         Vector2d endTangentVector = tangentVector(startDeriv, startPoint, endPoint, prevPoint);
         Point2d tangentVectorEndPoint = endTangentVector.toPoint();
 
-        Spline s = Spline.buildSpline6(startPoint, endPoint, tangentVectorEndPoint, tangentVectorEndPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
+        Spline s = new Spline(startPoint, endPoint, tangentVectorEndPoint, tangentVectorEndPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
         prevPoint = startPoint;
         startPoint = endPoint;
         road.addSpline(s, true);
@@ -100,11 +128,11 @@ public class RoadBuilder {
     }
 
     @SuppressWarnings("unused")
-    public RoadBuilder splineToPoint(Point2d endPoint, double endTangent){
+    public RoadBuilder splineConstHeading(Point2d endPoint, double endTangent){
         Point2d startTangentPoint = tangentVector(startDeriv, startPoint, endPoint, prevPoint).toPoint();
         Point2d endTangentPoint = tangentVector(endTangent, startPoint, endPoint, prevPoint).toPoint();
 
-        Spline s = Spline.buildSpline6(startPoint, endPoint, startTangentPoint, endTangentPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
+        Spline s = new Spline(startPoint, endPoint, startTangentPoint, endTangentPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
         startDeriv = endTangent;
         prevPoint = startPoint;
         startPoint = endPoint;
@@ -113,10 +141,119 @@ public class RoadBuilder {
         return this;
     }
 
+    @SuppressWarnings("unused")
+    public RoadBuilder lineLinearHeading(Point2d endPoint, double endAngle){
+        Vector2d v = endPoint.toVector().diff(startPoint.toVector());
+        double[] xcoeffs = new double[] {0, 0, 0, 0, v.getX(), startPoint.getX()};
+        double[] ycoeffs = new double[] {0, 0, 0, 0, v.getY(), startPoint.getY()};
+
+        HeadingInterpolation splineInterp = HeadingInterpolation.fromAngles(
+                Vector2d.fromPolar(1, startAng), endAngle - startAng, 0, 0, true
+        );
+        startAng = endAngle;
+
+        Spline s = new Spline();
+        NPoly xpoly = new NPoly(5), ypoly =  new NPoly(5);
+        xpoly.assignCoefficients(xcoeffs);
+        ypoly.assignCoefficients(ycoeffs);
+        s.setSpline(xpoly, ypoly, prevPoint);
+        s.unsetNull();
+        try {
+            s.unsetNull();
+        } catch (Exception e){
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        boolean cont = FastMath.abs(startDeriv - Line2d.getSlope(startPoint, endPoint)) < eps;
+        road.addSplineWithHeadingInterp(s, cont, splineInterp);
+
+        startDeriv = Line2d.getSlope(startPoint, endPoint);
+        start2ndDeriv = 0;
+        prevPoint = startPoint;
+        startPoint = endPoint;
+
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder lineSplineHeading(Point2d endPoint, double endAngle, double endTangentHeading){
+        Vector2d v = endPoint.toVector().diff(startPoint.toVector());
+        double[] xcoeffs = new double[] {0, 0, 0, 0, v.getX(), startPoint.getX()};
+        double[] ycoeffs = new double[] {0, 0, 0, 0, v.getY(), startPoint.getY()};
+        HeadingInterpolation splineInterp = HeadingInterpolation.fromAngles(
+                Vector2d.fromPolar(1, startAng), endAngle - startAng, lastAngDeriv, endTangentHeading, false
+        );
+        startAng = endAngle;
+
+        Spline s = new Spline();
+        NPoly xpoly = new NPoly(5), ypoly =  new NPoly(5);
+        xpoly.assignCoefficients(xcoeffs);
+        ypoly.assignCoefficients(ycoeffs);
+        s.setSpline(xpoly, ypoly, prevPoint);
+        s.unsetNull();
+        try {
+            s.unsetNull();
+        } catch (Exception e){
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        boolean cont = FastMath.abs(startDeriv - Line2d.getSlope(startPoint, endPoint)) < eps;
+        road.addSplineWithHeadingInterp(s, cont, splineInterp);
+
+        startDeriv = Line2d.getSlope(startPoint, endPoint);
+        start2ndDeriv = 0;
+        prevPoint = startPoint;
+        startPoint = endPoint;
+
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder splineLinearHeading(Point2d endPoint, double endAngle){
+        Vector2d endTangentVector = tangentVector(startDeriv, startPoint, endPoint, prevPoint);
+        Point2d tangentVectorEndPoint = endTangentVector.toPoint();
+        HeadingInterpolation splineInterp = HeadingInterpolation.fromAngles(
+                Vector2d.fromPolar(1, startAng), endAngle - startAng, 0, 0, true
+        );
+        startAng = endAngle;
+
+        Spline s = new Spline(startPoint, endPoint, tangentVectorEndPoint, tangentVectorEndPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
+        prevPoint = startPoint;
+        startPoint = endPoint;
+        road.addSplineWithHeadingInterp(s, true, splineInterp);
+
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder splineLinearHeading(Point2d endPoint, double endAngle, double endTangent){
+        return this;
+    }
+
+    @SuppressWarnings("unused")
+    public RoadBuilder splineSplineHeading(Point2d endPoint, double endAngle, double endTangent, double endTangentHeading){
+        Vector2d endTangentVector = tangentVector(startDeriv, startPoint, endPoint, prevPoint);
+        Point2d tangentVectorEndPoint = endTangentVector.toPoint();
+        HeadingInterpolation splineInterp = HeadingInterpolation.fromAngles(
+                Vector2d.fromPolar(1, startAng), endAngle - startAng, lastAngDeriv, endTangentHeading, false
+        );
+        startAng = endAngle;
+
+        Spline s = new Spline(startPoint, endPoint, tangentVectorEndPoint, tangentVectorEndPoint, new Point2d(start2ndDeriv, start2ndDeriv), new Point2d(start2ndDeriv, start2ndDeriv));
+        prevPoint = startPoint;
+        startPoint = endPoint;
+        lastAngDeriv = endTangentHeading;
+        road.addSplineWithHeadingInterp(s, true, splineInterp);
+
+        return this;
+    }
+
     // ???
     @SuppressWarnings("unused")
     @Unimplemented
-    public RoadBuilder splineToPointAlter2ndDeriv(Point2d endPoint, double deriv2){
+    public RoadBuilder splineAlter2ndDeriv(Point2d endPoint, double deriv2){
         return this;
     }
 

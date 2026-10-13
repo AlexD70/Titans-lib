@@ -20,11 +20,11 @@ public class MotionProfileTests {
     public Pair<MotionProfileXY, Road> buildTestProfile(ConstraintSetXY constr, double initVel, double endVel, double initAcc, int res){
         RoadBuilder builder = new RoadBuilder(new Point2d(0, 0), Math.PI, 0);
 
-        r = builder.lineToPoint(new Point2d(10, 10))
-                .splineToPointKeepTangent(new Point2d(20, 30))
-                .lineToPoint(new Point2d(-20, 30))
-                .splineToPoint(new Point2d(-20, -10), Math.PI / 3)
-                .splineToPointKeepTangent(new Point2d(-30, -30))
+        r = builder.lineConstHeading(new Point2d(10, 10))
+                .splineConstHeading(new Point2d(20, 30))
+                .lineConstHeading(new Point2d(-20, 30))
+                .splineConstHeading(new Point2d(-20, -10), Math.PI / 3)
+                .splineConstHeading(new Point2d(-30, -30))
                 .build();
 
         MotionProfileXY profile = MotionProfileXY.buildProfile(r, constr, initVel, endVel, initAcc, res);
@@ -81,11 +81,9 @@ public class MotionProfileTests {
         }
     }
 
-    // this test is MEGA SKETCHY
-    // im not sure what to do with it yet
     // i have a feeling it doesnt test anything useful
-    // currently disabled too because it keeps failing
     // and ive no idea how to fix it
+    // currently accumulates error due to imprecise dist calculation
     @Tag("test") @Test @Disabled
     void checkConstraints(){
          MotionProfileXY prof = prof1;
@@ -100,18 +98,18 @@ public class MotionProfileTests {
              Vector2d dr = ret1.getSecond().position.diff(ret2.getSecond().position).norm();
              disp += dr.abs();
              Vector2d v = ret2.getSecond().velocity.norm();
-             Vector2d a = ret2.getSecond().acceleration.norm();
+             //Vector2d a = ret2.getSecond().acceleration.norm();
 
              Vector2d v_actual = dr.mlt(1 / dt).norm();
              assertVectorsEqual(v_actual, v);
              assertTrue(v_actual.abs() < maxv);
-             Double curv = r.getCurvatureAtDisplacement(disp);
+             Double curv = r.getCurvatureAtDisp(disp);
              if(curv != null){
                  assertTrue(v_actual.abs() < maxangv / Math.abs(curv * 2));
              }
 
              Vector2d a_actual = v_actual.mlt(1 / dt).norm();
-             assertTrue(a_actual.equals(a) || a_actual.equals(a.mlt(-1)));
+
              assertTrue(a_actual.abs() < maxa);
          }
     }

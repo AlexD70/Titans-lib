@@ -16,7 +16,7 @@ public class Circle2d {
 
     // translate in the direction of the vector
     public Circle2d translate(Vector2d translation){
-        this.center.translate(translation);
+        this.center.translate(translation); // fix this
         return this;
     }
 

@@ -1,10 +1,9 @@
 import org.json.JSONWriter;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.ThrowingSupplier;
-import titans.algebra.NPoly;
+import titans.math.NPoly;
 import titans.geometry.Point2d;
-import titans.roads.Road;
-import titans.roads.Spline;
+import titans.math.Spline;
 import titans.util.NullSplineErr;
 
 import java.io.File;
@@ -37,9 +36,9 @@ public class MathTests {
 
         double ufin = 1, urand = Math.random(), ufirst = urand / 100000d;
 
-        ThrowingSupplier<Double> getLen = () -> s.displacementAt(ufin);
-        ThrowingSupplier<Double> getZero = () -> s.displacementAt(ufirst);
-        ThrowingSupplier<Double> getAny = () -> s.displacementAt(urand);
+        ThrowingSupplier<Double> getLen = () -> s.dispAt(ufin);
+        ThrowingSupplier<Double> getZero = () -> s.dispAt(ufirst);
+        ThrowingSupplier<Double> getAny = () -> s.dispAt(urand);
         double resLen = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getLen);
         double resZero = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getZero);
         double resRand = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getAny);
@@ -56,7 +55,7 @@ public class MathTests {
         Point2d endp = RoadResources.MathTests.points[1];
 
         RoadBuilderTests.assertPointsEqual(endp, s.pointAt(1));
-        RoadBuilderTests.assertPointsEqual(endp, s.pointAtDisplacement(s.length));
+        RoadBuilderTests.assertPointsEqual(endp, s.pointAtDisp(s.length));
     }
 
     void testParamFromDisp(){
@@ -64,9 +63,9 @@ public class MathTests {
         long millis = RoadResources.MathTests.MAX_MILLIS_BRENTOPT;
 
         double len = s.length, rand = Math.random() * len;
-        ThrowingSupplier<Double> getOne = () -> s.uAtDisplacement(len);
-        ThrowingSupplier<Double> getZero = () -> s.uAtDisplacement(0);
-        ThrowingSupplier<Double> getAny = () -> s.uAtDisplacement(rand);
+        ThrowingSupplier<Double> getOne = () -> s.uAtDisp(len);
+        ThrowingSupplier<Double> getZero = () -> s.uAtDisp(0);
+        ThrowingSupplier<Double> getAny = () -> s.uAtDisp(rand);
         double one = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getOne);
         double zero = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getZero);
         double any = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getAny);
@@ -81,10 +80,10 @@ public class MathTests {
         Spline s = RoadResources.MathTests.testSpline;
 
         double rand = Math.random();
-        Point2d ds = s.firstDerivativeAt(rand), dds = s.secondDerivativeAt(rand);
+        Point2d ds = s.derivAt(rand), dds = s.deriv2ndAt(rand);
 
-        assertEquals(ds, s.firstDerivativeAt(rand));
-        assertEquals(dds, s.secondDerivativeAt(rand));
+        assertEquals(ds, s.derivAt(rand));
+        assertEquals(dds, s.deriv2ndAt(rand));
     }
 
     void testTangents(){
@@ -92,23 +91,22 @@ public class MathTests {
         Spline s2 = RoadResources.MathTests.testSpline2;
 
         double rand = Math.random();
-        double tangent1 = s.tangentAt(rand);
-        double tangent2 = s2.tangentAt(rand);
+        double tangent1 = s.tanAt(rand);
+        double tangent2 = s2.tanAt(rand);
         //assertInInterval(tangent1, -Math.PI, Math.PI);
-        assertEquals(tangent1, s.tangentAt(rand));
+        assertEquals(tangent1, s.tanAt(rand));
         //assertInInterval(tangent2, -Math.PI, Math.PI);
-        assertEquals(tangent2, s2.tangentAt(rand));
+        assertEquals(tangent2, s2.tanAt(rand));
     }
 
     void testNullSpline(){
-        Spline s = Spline.getNullSpline();
-        assertThrowsExactly(NullSplineErr.class, () -> s.tangentAt(1));
-        assertThrowsExactly(NullSplineErr.class, () -> s.uAtDisplacement(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.firstDerivativeAt(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.displacementAt(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.pointAtDisplacement(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.positionVectorAt(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.secondDerivativeAt(0));
+        Spline s = new Spline();
+        assertThrowsExactly(NullSplineErr.class, () -> s.tanAt(1));
+        assertThrowsExactly(NullSplineErr.class, () -> s.uAtDisp(0));
+        assertThrowsExactly(NullSplineErr.class, () -> s.derivAt(0));
+        assertThrowsExactly(NullSplineErr.class, () -> s.dispAt(0));
+        assertThrowsExactly(NullSplineErr.class, () -> s.pointAtDisp(0));
+        assertThrowsExactly(NullSplineErr.class, () -> s.deriv2ndAt(0));
         assertThrowsExactly(NullSplineErr.class, s::getXCoeffs);
         assertThrowsExactly(NullSplineErr.class, s::getYCoeffs);
 

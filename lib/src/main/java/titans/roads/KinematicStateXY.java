@@ -5,14 +5,39 @@ import titans.geometry.Vector2d;
 
 // unimplemented
 public class KinematicStateXY {
-    public Point2d position;
-    public Vector2d velocity;
-    public Vector2d acceleration;
+    private final double time;
+    private final Point2d position;
+    private final Vector2d velocity;
+    private final Vector2d acceleration;
 
     public KinematicStateXY(Point2d pos, Vector2d vel, Vector2d acc){
         position = pos;
         velocity = vel;
         acceleration = acc;
+        time = 0;
+    }
+
+    public KinematicStateXY(double t, Point2d pos, Vector2d vel, Vector2d acc){
+        position = pos;
+        velocity = vel;
+        acceleration = acc;
+        time = t;
+    }
+
+    public double getTime(){
+        return time;
+    }
+
+    public Point2d getPos(){
+        return position;
+    }
+
+    public Vector2d getVel(){
+        return velocity;
+    }
+
+    public Vector2d getAcc(){
+        return acceleration;
     }
 
     public static KinematicStateXY getLinearInterpolation(KinematicStateXY first, KinematicStateXY second, double timetotal, double timefromfirst){
@@ -35,7 +60,8 @@ public class KinematicStateXY {
             return (
                     kst.position.equals(this.position) &&
                     kst.velocity.equals(this.velocity) &&
-                    kst.acceleration.equals(this.acceleration)
+                    kst.acceleration.equals(this.acceleration) &&
+                    kst.time == this.time
             );
         } else {
             return false;

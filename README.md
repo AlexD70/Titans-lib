@@ -28,7 +28,7 @@ This part of our codebase will be based on one of our alumni's work around wheel
 - [ ] p2p follower
 - [x] Road building API
 - [x] Road building tests
-- [ ] equation & function cache to speed up computation
+- [x] equation & function cache to speed up computation
 - [x] interpolation LUT
 - [ ] publish to maven as a beta version
 - [ ] create a new project to link this to FTC robots
