@@ -2,13 +2,13 @@ package titans.roads;
 
 public class HolonomicKinematics {
     private double xWheelOffset = 0, yWheelOffset = 0;
-    private ConstraintSetXY constraints;
+    private ConstraintSet constraints;
 
-    public HolonomicKinematics(ConstraintSetXY constr){
+    public HolonomicKinematics(ConstraintSet constr){
         constraints = constr;
     }
 
-    public HolonomicKinematics(double x, double y, ConstraintSetXY constr){
+    public HolonomicKinematics(double x, double y, ConstraintSet constr){
         xWheelOffset = x;
         yWheelOffset = y;
         constraints = constr;
@@ -20,19 +20,19 @@ public class HolonomicKinematics {
     }
 
     public double maxVel() {
-        return constraints.maxVel;
+        return constraints.getMaxVel();
     }
 
     public double maxAcc() {
-        return constraints.maxAccel;
+        return constraints.getMaxAcc();
     }
 
     public double maxAngVel() {
-        return constraints.maxAngVel;
+        return constraints.getMaxAngVel();
     }
 
     public double maxAngAcc() {
-        return constraints.maxAngAccel;
+        return constraints.getMaxAngAcc();
     }
 
     public double calculateTranslationalScale(double vx, double vy, double omega) {

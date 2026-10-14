@@ -26,14 +26,14 @@ public class HolonomicFollower {
         yPID = new PID(kP, kI, kD);
     }
 
-    public void followRoad(Road road, ConstraintSetXY constraints, double initVel, double endVel, double initAcc){
-        MotionProfileXY profile = MotionProfileXY.buildProfile(road, constraints, initVel, endVel, initAcc, 2000);
-        lut = InterpolationLUT.linear_fromMotionProfile(profile);
+    public void followRoad(Road road, ConstraintSet constraints, double initVel, double endVel, double initAcc){
+        TrapezoidalMotionProfile profile = new TrapezoidalMotionProfile(road, constraints, initVel, endVel, initAcc, 10, 10, 2000);
+        lut = new InterpolationLUT(profile);
         this.road = road;
         reset();
     }
 
-    public void followRoad(Road road, ConstraintSetXY constraints){
+    public void followRoad(Road road, ConstraintSet constraints){
         followRoad(road, constraints, 0, 0, 0);
     }
 
@@ -61,9 +61,9 @@ public class HolonomicFollower {
     }
 
     public Vector2d calculate(double time, Vector2d currentPos){
-        KinematicStateXY state = lut.getStateAt(time);
-        Vector2d deltaPos = state.position.toVector().diff(currentPos);
+        KinematicState state = lut.getStateAt(time);
+        Vector2d deltaPos = state.getPos().getVector().diff(currentPos);
 
-        return calculate(deltaPos, state.velocity, state.acceleration);
+        return calculate(deltaPos, state.getVel(), state.getAcc());
     }
 }

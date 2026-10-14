@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 /**
  * This class represents a trapezoidal motion profile that plans velocity and acceleration for a {@link Road}.
- * The class builds the whole profile by itself and requires a {@link ConstraintSetXY} and a Kinematics object (WIP).
+ * The class builds the whole profile by itself and requires a {@link ConstraintSet} and a Kinematics object (WIP).
  *
  * <p>
  *     !todo: write about sampling and resolution
@@ -24,15 +24,15 @@ import java.util.ArrayList;
  * @author AlexD70
  * @see InterpolationLUT
  * @see Road
- * @see ConstraintSetXY
+ * @see ConstraintSet
  */
-public class MotionProfileXY {
+public class TrapezoidalMotionProfile {
     Road road;
     double duration;
     int resolution;
     HolonomicKinematics kin;
 
-    public ArrayList<KinematicStateXY> timeProfile = new ArrayList<>();
+    private ArrayList<KinematicState> timeProfile = new ArrayList<>();
 
     /**
      * Internal ctor that builds an empty motion profile. Should not be used directly unless inheiriting from this class.
@@ -40,7 +40,7 @@ public class MotionProfileXY {
      * @param kin the Kinematics object
      * @param r the {@code Road} to build the profile for
      */
-    protected MotionProfileXY(int resolution, HolonomicKinematics kin, Road r){
+    protected TrapezoidalMotionProfile(int resolution, HolonomicKinematics kin, Road r){
         if(resolution <= 2){
             throw new RuntimeException("Resolution is too low to build a motion profile");
         }
@@ -56,7 +56,7 @@ public class MotionProfileXY {
      * The displacement profile is a local variable of the ctor such that at the end, only the time profile remains
      * to reduce the memory occupied by the motion profile.
      * @param road the {@link Road} to build the profile for
-     * @param constraints the {@link ConstraintSetXY} for the robot
+     * @param constraints the {@link ConstraintSet} for the robot
      * @param initVel velocity at the start of the road (absolute value)
      * @param endVel velocity at the end of the road (absolute value)
      * @param initAcc acceleration at the start of the road (absolute value)
@@ -64,7 +64,7 @@ public class MotionProfileXY {
      * @param yWheelOffset robot wheel offset on y-axis
      * @param resolution profile resolution. Should be at least 3
      */
-    public MotionProfileXY(Road road, ConstraintSetXY constraints, double initVel, double endVel, double initAcc, double xWheelOffset, double yWheelOffset, int resolution){
+    public TrapezoidalMotionProfile(Road road, ConstraintSet constraints, double initVel, double endVel, double initAcc, double xWheelOffset, double yWheelOffset, int resolution){
         this(resolution, new HolonomicKinematics(xWheelOffset, yWheelOffset, constraints), road);
         ArrayList<Pair<Double, Double>> dispProfile = new ArrayList<>(resolution + 1);
 
@@ -108,10 +108,10 @@ public class MotionProfileXY {
      * @param vy velocity on y-axis
      * @param ax acceleration on x-axis
      * @param ay acceleration on y-axis
-     * @see KinematicStateXY
+     * @see KinematicState
      */
     private void addToProfile(double time, Point2d xy, double vx, double vy, double ax, double ay){
-        timeProfile.add(new KinematicStateXY(
+        timeProfile.add(new KinematicState(
                 time, xy, new Vector2d(vx, vy), new Vector2d(ax, ay)
         ));
     }
@@ -290,5 +290,12 @@ public class MotionProfileXY {
         return time;
     }
 
+    public int getProfileSize(){
+        return timeProfile.size();
+    }
+
+    public KinematicState getStateByIdx(int index){
+        return timeProfile.get(index);
+    }
 
 }

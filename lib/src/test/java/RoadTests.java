@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import titans.math.NPoly;
 import titans.geometry.Point2d;
+import titans.math.ParametricCurve;
 import titans.roads.Road;
 import titans.math.Spline;
 
@@ -41,9 +42,18 @@ public class RoadTests {
 
         System.out.println(road.getSegment2Disp(0).getFirst().dispAt(1));
 
-        Pair<Spline, Double> output = road.getSegment2Disp(2);
-        System.out.println(Arrays.toString(output.getFirst().getXCoeffs()));
-        System.out.println(Arrays.toString(output.getFirst().getYCoeffs()));
+        Pair<ParametricCurve, Double> output = road.getSegment2Disp(2);
+        Spline spline;
+
+        if(output.getFirst() instanceof Spline){
+            spline = (Spline) output.getFirst();
+        } else {
+            assert(false);
+            return;
+        }
+
+        System.out.println(Arrays.toString(spline.getXCoeffs()));
+        System.out.println(Arrays.toString(spline.getYCoeffs()));
         System.out.println(output.getSecond());
 
         Point2d point = road.pointAtDisp(1);

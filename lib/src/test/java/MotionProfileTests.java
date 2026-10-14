@@ -17,17 +17,17 @@ public class MotionProfileTests {
         MathTests.assertWithinError(v1.getY() - v2.getY(), 0, EPS);
     }
     public Road r;
-    public Pair<MotionProfileXY, Road> buildTestProfile(ConstraintSetXY constr, double initVel, double endVel, double initAcc, int res){
+    public Pair<TrapezoidalMotionProfile, Road> buildTestProfile(ConstraintSet constr, double initVel, double endVel, double initAcc, int res){
         RoadBuilder builder = new RoadBuilder(new Point2d(0, 0), Math.PI, 0);
 
-        r = builder.lineConstHeading(new Point2d(10, 10))
-                .splineConstHeading(new Point2d(20, 30))
-                .lineConstHeading(new Point2d(-20, 30))
-                .splineConstHeading(new Point2d(-20, -10), Math.PI / 3)
-                .splineConstHeading(new Point2d(-30, -30))
+        r = builder.line(new Point2d(10, 10))
+                .spline(new Point2d(20, 30))
+                .line(new Point2d(-20, 30))
+                .spline(new Point2d(-20, -10))
+                .spline(new Point2d(-30, -30))
                 .build();
 
-        MotionProfileXY profile = MotionProfileXY.buildProfile(r, constr, initVel, endVel, initAcc, res);
+        TrapezoidalMotionProfile profile = new TrapezoidalMotionProfile(r, constr, initVel, endVel, initAcc, 10, 10, res);
         return new Pair<>(profile, r);
     }
 
@@ -35,46 +35,45 @@ public class MotionProfileTests {
     double maxa = Math.random() * 30 + 20;
     double maxangv = Math.random() * Math.PI + Math.PI;
     double maxanga = Math.random() * Math.PI + Math.PI;
-    ConstraintSetXY constr = new ConstraintSetXY(maxv, maxa, maxangv, maxanga);
-    Pair<MotionProfileXY, Road> res1 = buildTestProfile(constr, 0, 0, 0, 2000);
-    Pair<MotionProfileXY, Road> res2 = buildTestProfile(constr, 0, 0, 0, 2000);
-    MotionProfileXY prof1 = res1.getValue0(), prof2 = res2.getValue0();
+    ConstraintSet constr = new ConstraintSet(maxv, maxa, maxangv, maxanga);
+    Pair<TrapezoidalMotionProfile, Road> res1 = buildTestProfile(constr, 0, 0, 0, 2000);
+    Pair<TrapezoidalMotionProfile, Road> res2 = buildTestProfile(constr, 0, 0, 0, 2000);
+    TrapezoidalMotionProfile prof1 = res1.getValue0(), prof2 = res2.getValue0();
 
     @Tag("test") @Test
     void checkMathematicalStability(){
-        int n = prof1.timeProfile.size();
-        int m = prof2.timeProfile.size();
+        int n = prof1.getProfileSize();
+        int m = prof2.getProfileSize();
 
         assertEquals(m, n);
 
         for(int i = 0; i < n; i++){
-            org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret1 = prof1.timeProfile.get(i);
-            org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret2 = prof2.timeProfile.get(i);
+            KinematicState ret1 = prof1.getStateByIdx(i);
+            KinematicState ret2 = prof2.getStateByIdx(i);
 
-            assertEquals(ret1.getFirst(), ret2.getFirst());
-            assertEquals(ret1.getSecond(), ret2.getSecond());
+            assertEquals(ret1, ret2);
         }
     }
 
 
     @Tag("test") @Test
     void checkSanity(){
-        MotionProfileXY prof = prof1;
-        int n = prof.timeProfile.size();
+        TrapezoidalMotionProfile prof = prof1;
+        int n = prof.getProfileSize();
         double disp = 0;
 
         for(int i = 0; i < n - 1; i++){
-            org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret1 = prof.timeProfile.get(i);
-            org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret2 = prof.timeProfile.get(i + 1);
+            KinematicState ret1 = prof.getStateByIdx(i);
+            KinematicState ret2 = prof.getStateByIdx(i + 1);
 
-            double time1 = ret1.getFirst(), time2 = ret2.getFirst();
+            double time1 = ret1.getTime(), time2 = ret2.getTime();
             System.out.printf("%f - t1, %f - t2%n", time1, time2);
             assertTrue(time1 >= 0 && time2 >= 0 && time2 > time1);
 
-            Vector2d v1 = ret1.getSecond().velocity, v2 = ret2.getSecond().velocity;
+            Vector2d v1 = ret1.getVel(), v2 = ret2.getVel();
             MathTests.assertWithinError(v1.abs(), v2.abs(), maxa * (time2 - time1) + EPS);
 
-            Vector2d a1 = ret1.getSecond().acceleration, a2 = ret2.getSecond().acceleration;
+            Vector2d a1 = ret1.getAcc(), a2 = ret2.getAcc();
             System.out.printf("%f - a1, %f - a2%n", a1.abs(), a2.abs());
             MathTests.assertInInterval(a1.abs(), 0 - EPS, maxa + EPS);
             MathTests.assertInInterval(a2.abs(), 0 - EPS, maxa + EPS);
@@ -86,18 +85,18 @@ public class MotionProfileTests {
     // currently accumulates error due to imprecise dist calculation
     @Tag("test") @Test @Disabled
     void checkConstraints(){
-         MotionProfileXY prof = prof1;
-         int n = prof.timeProfile.size();
+         TrapezoidalMotionProfile prof = prof1;
+         int n = prof.getProfileSize();
          double disp = 0;
 
          for(int i = 0; i < n - 1; i++){
-             org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret1 = prof.timeProfile.get(i);
-             org.apache.commons.math3.util.Pair<Double, KinematicStateXY> ret2 = prof.timeProfile.get(i + 1);
+             KinematicState ret1 = prof.getStateByIdx(i);
+             KinematicState ret2 = prof.getStateByIdx(i + 1);
 
-             double dt = ret2.getFirst() - ret1.getFirst();
-             Vector2d dr = ret1.getSecond().position.diff(ret2.getSecond().position).norm();
+             double dt = ret2.getTime() - ret1.getTime();
+             Vector2d dr = ret1.getPos().getPoint().diff(ret2.getPos().getPoint()).norm();
              disp += dr.abs();
-             Vector2d v = ret2.getSecond().velocity.norm();
+             Vector2d v = ret2.getVel().norm();
              //Vector2d a = ret2.getSecond().acceleration.norm();
 
              Vector2d v_actual = dr.mlt(1 / dt).norm();

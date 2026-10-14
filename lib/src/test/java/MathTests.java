@@ -43,10 +43,10 @@ public class MathTests {
         double resZero = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getZero);
         double resRand = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getAny);
 
-        assertWithinError(resLen, s.length);
+        assertWithinError(resLen, s.getLength());
         assertWithinError(resZero, 0);
-        assertTrue(0 <= resRand && resRand <= s.length,
-                String.format("ResRand %f exceeds bounds of 0, %f when u = %f.", resRand, s.length, urand));
+        assertTrue(0 <= resRand && resRand <= s.getLength(),
+                String.format("ResRand %f exceeds bounds of 0, %f when u = %f.", resRand, s.getLength(), urand));
     }
 
     void testSplineEndPoint(){
@@ -55,14 +55,14 @@ public class MathTests {
         Point2d endp = RoadResources.MathTests.points[1];
 
         RoadBuilderTests.assertPointsEqual(endp, s.pointAt(1));
-        RoadBuilderTests.assertPointsEqual(endp, s.pointAtDisp(s.length));
+        RoadBuilderTests.assertPointsEqual(endp, s.pointAtDisp(s.getLength()));
     }
 
     void testParamFromDisp(){
         Spline s = RoadResources.MathTests.testSpline;
         long millis = RoadResources.MathTests.MAX_MILLIS_BRENTOPT;
 
-        double len = s.length, rand = Math.random() * len;
+        double len = s.getLength(), rand = Math.random() * len;
         ThrowingSupplier<Double> getOne = () -> s.uAtDisp(len);
         ThrowingSupplier<Double> getZero = () -> s.uAtDisp(0);
         ThrowingSupplier<Double> getAny = () -> s.uAtDisp(rand);
@@ -139,7 +139,7 @@ public class MathTests {
         // get java output
         Instant start = Instant.now();
         Point2d[] p = RoadResources.MathTests.points;
-        Spline s = Spline.buildSpline6(p[0], p[3], p[1], p[4], p[2], p[5]);
+        Spline s = new Spline(p[0], p[3], p[1], p[4], p[2], p[5]);
         Instant end = Instant.now();
 
         long elapsed = Duration.between(start, end).toMillis();

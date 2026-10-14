@@ -8,8 +8,8 @@ public class RoadResources {
                 new Point2d(-0.233, 1.5), new Point2d(-21, 3)
         };
 
-        public static final Spline testSpline = Spline.buildSpline6(points[0], points[1], points[2], points[3], points[4], points[5]);
-        public static final Spline testSpline2 = Spline.buildSpline6(points[3], points[4], points[2], points[5], points[0], points[1]);
+        public static final Spline testSpline = new Spline(points[0], points[1], points[2], points[3], points[4], points[5]);
+        public static final Spline testSpline2 = new Spline(points[3], points[4], points[2], points[5], points[0], points[1]);
         public static final long MAX_MILLIS_INTEGRATION = 7, MAX_MILLIS_BRENTOPT = 15;
     }
 }

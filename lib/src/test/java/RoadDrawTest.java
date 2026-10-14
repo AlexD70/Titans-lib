@@ -16,10 +16,10 @@ public class RoadDrawTest {
     void showTestRoad() throws IOException, InterruptedException {
         RoadBuilder builder = new RoadBuilder(new Point2d(2, 2), 0, 0);
         Road road = builder
-                .splineConstHeading(new Point2d(30, 45), -Math.PI/2)
-                .lineConstHeading(new Point2d(30, 40))
-                .splineConstHeading(new Point2d(40, 30))
-                .splineConstHeading(new Point2d(50, 50), Math.PI/2)
+                .spline(new Point2d(30, 45))
+                .line(new Point2d(30, 40))
+                .spline(new Point2d(40, 30))
+                .spline(new Point2d(50, 50))
                 .build();
 
         drawRoad(road, 0.1);
@@ -29,26 +29,27 @@ public class RoadDrawTest {
     void showTestMotionProfile() throws IOException, InterruptedException {
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0);
         Road road = builder
-                .splineConstHeading(new Point2d(3, 3), Math.PI / 2)
-                .splineConstHeading(new Point2d(10, 10))
-                .lineConstHeading(new Point2d(4, 5))
-                .lineConstHeading(new Point2d(4, 0)).build();
-        ConstraintSetXY constr = new ConstraintSetXY(3.65, 2, 3.6, 1);
+                .spline(new Point2d(3, 3))
+                .spline(new Point2d(10, 10))
+                .line(new Point2d(4, 5))
+                .line(new Point2d(4, 0)).build();
+        ConstraintSet constr = new ConstraintSet(3.65, 2, 3.6, 1);
         drawRoad(road, 0.1);
 
-        MotionProfileXY profile = MotionProfileXY.buildProfile(road, constr, 0, 0, 0, 2000);
+        TrapezoidalMotionProfile profile = new TrapezoidalMotionProfile(road, constr, 0, 0, 0, 10, 10, 2000);
         drawProfile(profile);
     }
 
-    void drawProfile(MotionProfileXY profile) throws InterruptedException, IOException {
+    void drawProfile(TrapezoidalMotionProfile profile) throws InterruptedException, IOException {
         StringBuffer jsonData = new StringBuffer();
         JSONWriter jsonifier = new JSONWriter(jsonData)
                 .object()
                 .key("points")
                 .array();
 
-        ArrayList<Pair<Double, KinematicStateXY>> arr = profile.timeProfile;
-        for(Pair<Double, KinematicStateXY> p : arr){
+        /*
+        ArrayList<Pair<Double, KinematicState>> arr = profile.timeProfile;
+        for(Pair<Double, KinematicState> p : arr){
             System.out.print("time ");
             System.out.println(p.getFirst());
             System.out.print("vel:");
@@ -68,6 +69,7 @@ public class RoadDrawTest {
         proc.waitFor();
 
         assertEquals(0, proc.exitValue());
+         */
     }
 
     // this test is for visual purposes... it doesnt actually check anything

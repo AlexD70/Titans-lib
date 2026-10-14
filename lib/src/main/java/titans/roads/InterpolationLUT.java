@@ -1,52 +1,57 @@
 package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
-import org.apache.commons.math3.util.Pair;
-import titans.geometry.Point2d;
-import titans.geometry.Vector2d;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.function.Function;
-
+/**
+ * A lookup table for motion profiles that linearly interpolates between kinematic states.
+ * Once this object is created, the road is no longer useful for trajectory
+ * following purposes and can and SHOULD be deleted.
+ *
+ * @author AlexD70
+ */
 public class InterpolationLUT {
-    public ArrayList<Double> keys;
-    public ArrayList<KinematicStateXY> values;
+    private final TrapezoidalMotionProfile profile;
 
-    public int first = 0, second = 1;
-    public double eps = 0.0001;
-    public int maxIter = 3;
+    private int first = 0, second = 1;
+    private static final double eps = 0.0001;
+    private int maxIter = 3;
 
-    public KinematicStateXY getStateAt(double t){
-        double time1 = keys.get(first);
-        double time2 = keys.get(second);
+    public double getTime(int index){
+        return getState(index).getTime();
+    }
+
+    public KinematicState getState(int index){
+        return profile.getStateByIdx(index);
+    }
+
+    public KinematicState getStateAt(double t){
+        double time1 = this.getTime(first);
+        double time2 = this.getTime(second);
 
         int iter = 0;
         while(iter < maxIter) {
             if (FastMath.abs(t - first) <= eps) {
                 // do not go to next here
-                return values.get(first);
+                return getState(first);
 
             } else if (FastMath.abs(t - second) <= eps) {
                 first += 1;
                 second += 1;
-                return values.get(second);
+                return getState(second);
 
             } else if (time1 < t && t < time2) {
                 // do not go to next in this branch
-                KinematicStateXY state1 = values.get(first);
-                KinematicStateXY state2 = values.get(second);
-                double totaltime = FastMath.abs(time2 - time1);
-                double dtime = FastMath.abs(t - time1);
+                KinematicState state1 = getState(first);
+                KinematicState state2 = getState(second);
 
-                return KinematicStateXY.getLinearInterpolation(state1, state2, totaltime, dtime);
+                return KinematicState.getLinearInterpolation(state1, state2, t);
 
             } else {
                 first += 1;
                 second += 1;
                 iter += 1;
-                time1 = keys.get(first);
-                time2 = keys.get(second);
+                time1 = getState(first).getTime();
+                time2 = getState(second).getTime();
             }
         }
 
@@ -55,7 +60,7 @@ public class InterpolationLUT {
     }
 
     public double getEndTime(){
-        return keys.getLast();
+        return getTime(profile.getProfileSize() - 1);
     }
 
     // should not be used by the user
@@ -70,21 +75,8 @@ public class InterpolationLUT {
         this.maxIter = newMaxIter;
     }
 
-    public InterpolationLUT(ArrayList<Double> keys, ArrayList<KinematicStateXY> values){
-        this.keys = keys;
-        this.values = values;
-        //this.maxIter = this.values.size() + 1;
-    }
-
-    public static InterpolationLUT linear_fromMotionProfile(MotionProfileXY profile){
-        ArrayList<Double> keys = new ArrayList<>(profile.timeProfile.size());
-        ArrayList<KinematicStateXY> kinematicstates = new ArrayList<>(profile.timeProfile.size());
-        for (Pair<Double, KinematicStateXY> p : profile.timeProfile){
-            keys.add(p.getFirst());
-            kinematicstates.add(p.getSecond());
-        }
-
-        return new InterpolationLUT(keys, kinematicstates);
+    public InterpolationLUT(TrapezoidalMotionProfile profile){
+        this.profile = profile;
     }
 
 }

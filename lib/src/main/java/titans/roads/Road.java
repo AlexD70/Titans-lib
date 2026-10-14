@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
+import titans.math.ParametricCurve;
 import titans.math.Spline;
 import titans.util.*;
 
@@ -38,7 +39,7 @@ import java.util.*;
 public class Road {
     private final static int MAX_SEGMENTS = 30;
 
-    protected ArrayList<Spline> segments = new ArrayList<>(MAX_SEGMENTS + 1);
+    protected ArrayList<ParametricCurve> segments = new ArrayList<>(MAX_SEGMENTS + 1);
     protected ArrayList<Boolean> isContinous = new ArrayList<>(MAX_SEGMENTS + 1);
     protected ArrayList<HeadingInterpolation> headingInterp = new ArrayList<>(MAX_SEGMENTS + 1);
     protected double[] lenarr = new double[MAX_SEGMENTS + 1];
@@ -115,15 +116,13 @@ public class Road {
         }
     }
 
-    // TODO: write a test for this one
-
     /**
      * Searches the correct segment by road displacement.
      * @param d displacement in cm
      * @return a {@code Pair<Spline, Double>} containing the segment as a {@code Spline} and the relative displacement on that segment
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Pair<Spline, Double> getSegment2Disp(double d){
+    public Pair<ParametricCurve, Double> getSegment2Disp(double d){
         if(d < 0 || d > totalLength){
             throw new RuntimeException("Displacement out of bounds!");
         }
@@ -139,7 +138,7 @@ public class Road {
      * the relative displacement on that segment
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Triplet<Spline, Integer, Double> getSegment3Disp(double d){
+    public Triplet<ParametricCurve, Integer, Double> getSegment3Disp(double d){
         if(d < 0 || d > totalLength){
             throw new RuntimeException("Displacement out of bounds!");
         }
@@ -155,7 +154,7 @@ public class Road {
      * and a boolean indicating if the road is continuous in the vicinity of the given point
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Triplet<Spline, Double, Boolean> getSegmentCont3Disp(double d){
+    public Triplet<ParametricCurve, Double, Boolean> getSegmentCont3Disp(double d){
         if(d < 0 || d > totalLength){
             throw new RuntimeException("Displacement out of bounds!");
         }
@@ -181,15 +180,15 @@ public class Road {
     }
 
     public Point2d pointAtDisp(double d){
-        Pair<Spline, Double> output = getSegment2Disp(d);
+        Pair<ParametricCurve, Double> output = getSegment2Disp(d);
         return output.getFirst().pointAtDisp(output.getSecond());
     }
 
 
     @Useless
     public double slopeAtDisp(double d){
-        Pair<Spline, Double> output = getSegment2Disp(d);
-        Spline s = output.getFirst();
+        Pair<ParametricCurve, Double> output = getSegment2Disp(d);
+        ParametricCurve s = output.getFirst();
         return s.tanAt(s.uAtDisp(output.getSecond()));
     }
 
@@ -201,8 +200,8 @@ public class Road {
      * @return a new {@code @Nullable Point2d} object
      */
     public @Nullable Point2d getDerivAtDisp(double d){
-        Triplet<Spline, Double, Boolean> segment = this.getSegmentCont3Disp(d);
-        Spline s = segment.getValue0();
+        Triplet<ParametricCurve, Double, Boolean> segment = this.getSegmentCont3Disp(d);
+        ParametricCurve s = segment.getValue0();
         if(! segment.getValue2()){ // segment breaks continuity
             return null;
         }
@@ -216,8 +215,8 @@ public class Road {
      * @return a new {@code @Nonnull Point2d} object
      */
     public @Nonnull Point2d getDerivAtDispNonnull(double d){
-        Triplet<Spline, Double, Boolean> segment = this.getSegmentCont3Disp(d);
-        Spline s = segment.getValue0();
+        Triplet<ParametricCurve, Double, Boolean> segment = this.getSegmentCont3Disp(d);
+        ParametricCurve s = segment.getValue0();
         return s.derivAt(s.uAtDisp(segment.getValue1()));
     }
 
@@ -229,8 +228,8 @@ public class Road {
      * @return the curvature as a {@code Double}
      */
     public @Nullable Double getCurvatureAtDisp(double d){
-        Pair<Spline, Double> output = getSegment2Disp(d);
-        Spline s = output.getFirst();
+        Pair<ParametricCurve, Double> output = getSegment2Disp(d);
+        ParametricCurve s = output.getFirst();
 
         double u = s.uAtDisp(output.getSecond());
         Vector2d vec1stDeriv = s.derivAt(u).toVector();
@@ -255,7 +254,7 @@ public class Road {
         return n;
     }
 
-    public Spline getSegmentByIndex(int idx){
+    public ParametricCurve getSegmentByIndex(int idx){
         return segments.get(idx);
     }
 
@@ -265,9 +264,9 @@ public class Road {
      * @return a {@code Vector2d}
      */
     public Vector2d getHeadingAtDisp(double d){
-        Triplet<Spline, Integer, Double> ret = getSegment3Disp(d);
+        Triplet<ParametricCurve, Integer, Double> ret = getSegment3Disp(d);
 
-        Spline s = ret.getValue0();
+        ParametricCurve s = ret.getValue0();
         double param = s.uAtDisp(ret.getValue2());
         HeadingInterpolation interp = getHeadingInterpByIndex(ret.getValue1());
 

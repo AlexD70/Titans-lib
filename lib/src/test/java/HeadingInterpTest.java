@@ -11,7 +11,7 @@ public class HeadingInterpTest {
     void testLineToLinearHeading(){
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0, 0);
 
-        Road r = builder.lineLinearHeading(new Point2d(10, 10), FastMath.PI / 2).build();
+        Road r = builder.line(new Point2d(10, 10)).build();
 
         Vector2d startHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0);
         Vector2d midHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0.5);
@@ -25,7 +25,7 @@ public class HeadingInterpTest {
     void testLineToSplineHeading(){
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0, 0);
 
-        Road r = builder.lineSplineHeading(new Point2d(10, 10), FastMath.PI / 2, FastMath.PI / 3).build();
+        Road r = builder.line(new Point2d(10, 10)).build();
 
         Vector2d startHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0);
         Vector2d midHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0.5);
@@ -39,7 +39,7 @@ public class HeadingInterpTest {
     void testSplineToLinearHeading(){
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0, 0);
 
-        Road r = builder.splineLinearHeading(new Point2d(10, 10), FastMath.PI / 2).build();
+        Road r = builder.spline(new Point2d(10, 10)).build();
 
         Vector2d startHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0);
         Vector2d midHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0.5);
@@ -53,7 +53,7 @@ public class HeadingInterpTest {
     void testSplineToSplineHeading(){
         RoadBuilder builder = new RoadBuilder(new Point2d(), 0, 0, 0);
 
-        Road r = builder.splineSplineHeading(new Point2d(10, 10), FastMath.PI / 2, FastMath.PI, FastMath.PI / 2).build();
+        Road r = builder.spline(new Point2d(10, 10)).build();
 
         Vector2d startHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0);
         Vector2d midHeading = r.getHeadingInterpByIndex(0).getNormedVectorAtParam(0.5);

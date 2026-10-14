@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import titans.roads.ConstraintSetXY;
+import titans.roads.ConstraintSet;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -11,7 +11,7 @@ public class BenchmarkTest {
     @Test @Tag("benchmark")
     void benchmarkProfileGeneration(){
         MotionProfileTests profileTests = new MotionProfileTests();
-        ConstraintSetXY constr = profileTests.constr;
+        ConstraintSet constr = profileTests.constr;
 
         System.out.println("nr, ms");
         for(int i = 0; i < 100; i ++) {

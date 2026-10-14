@@ -38,7 +38,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * @author AlexD70
  */
 @ParametersAreNonnullByDefault
-public class Spline {
+public class Spline implements ParametricCurve {
     private NPoly xpoly = null, ypoly = null;
     private NPoly xderiv = null, yderiv = null;
     private NPoly x2ndderiv = null, y2ndderiv = null;
@@ -155,6 +155,7 @@ public class Spline {
     // ===================================================
     // GETTERS ===========================================
 
+    @Override
     @Nonnull
     public Point2d getStartPoint(){
         if (isNull) {
@@ -163,6 +164,7 @@ public class Spline {
         return startPoint;
     }
 
+    @Override
     @Nonnull
     public Point2d getEndPoint(){
         if (isNull) {
@@ -171,6 +173,7 @@ public class Spline {
         return endPoint;
     }
 
+    @Override
     public double getLength(){
         return length;
     }
@@ -200,7 +203,7 @@ public class Spline {
      * @return a new {@code Point2d} object
      * @throws NullSplineErr
      */
-    @Nonnull
+    @Override @Nonnull
     public Point2d pointAt(double u){
         if(isNull) {
             throw new NullSplineErr();
@@ -221,6 +224,7 @@ public class Spline {
      * @throws NullSplineErr see class description
      * @throws TooManyEvaluationsException
      */
+    @Override
     public double dispAt(double u){
         if(isNull){
             throw new NullSplineErr();
@@ -257,6 +261,7 @@ public class Spline {
         return 0;
     }
 
+    @Override
     @Nonnull
     public Point2d derivAt(double u) {
         if(isNull){
@@ -265,6 +270,7 @@ public class Spline {
         return new Point2d(xderiv.apply(u), yderiv.apply(u));
     }
 
+    @Override
     @Nonnull
     public Point2d deriv2ndAt(double u){
         if(isNull){
@@ -282,6 +288,7 @@ public class Spline {
      * @return tangent angle in radians
      * @throws NullSplineErr
      */
+    @Override
     public double tanAt(double u){
         if(isNull){
             throw new NullSplineErr();
@@ -297,6 +304,7 @@ public class Spline {
      * @return a new {@code Vector2d} object
      * @throws NullSplineErr
      */
+    @Override
     @Nonnull
     public Vector2d tanVecAt(double u){
         if(isNull){
@@ -316,6 +324,7 @@ public class Spline {
      * @throws NullSplineErr see class description
      * @throws OutOfBoundsException if displacement is negative or greater than {@code length}
      */
+    @Override
     public double uAtDisp(double d){
         if(isNull){
             throw new NullSplineErr();
@@ -353,6 +362,7 @@ public class Spline {
      * @throws NullSplineErr see class description
      * @throws OutOfBoundsException see {@link #uAtDisp(double)}
      */
+    @Override
     @Nonnull
     public Point2d pointAtDisp(double d){
         if(isNull){

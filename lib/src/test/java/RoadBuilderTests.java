@@ -3,6 +3,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
+import titans.math.ParametricCurve;
 import titans.roads.Road;
 import titans.roads.RoadBuilder;
 import titans.math.Spline;
@@ -43,19 +44,22 @@ public class RoadBuilderTests {
     // save the end points of the curves and their tangents to check them later
     Road generateTestRoad(boolean keepTangents){
         RoadBuilder builder = new RoadBuilder(new Point2d(0, 0), tangents[0], 0);
+
+
+
         if(keepTangents){
             return builder
-                    .splineConstHeading(points[0])
-                    .splineConstHeading(points[1])
-                    .splineConstHeading(points[2])
-                    .splineConstHeading(points[3])
+                    .spline(points[0])
+                    .spline(points[1])
+                    .spline(points[2])
+                    .spline(points[3])
                     .build();
         } else {
             return builder
-                    .splineConstHeading(points[0], tangents[1])
-                    .splineConstHeading(points[1], tangents[2])
-                    .splineConstHeading(points[2], tangents[3])
-                    .splineConstHeading(points[3], tangents[4])
+                    .spline(points[0])
+                    .spline(points[1])
+                    .spline(points[2])
+                    .spline(points[3])
                     .build();
         }
     }
@@ -85,16 +89,16 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r1.getSegment2Disp(arr1[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
             assertPointsEqual(points[i], s.pointAtDisp(reldisp));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r2.getSegment2Disp(arr2[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
             assertPointsEqual(points[i], s.pointAtDisp(reldisp));
         }
@@ -129,16 +133,16 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r1.getSegment2Disp(arr1[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
             MathTests.assertWithinError(Math.abs(tangents[0]), s.tanAt(s.uAtDisp(reldisp)));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r2.getSegment2Disp(arr2[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
 
             MathTests.assertWithinError(Math.abs(tangents[i + 1]), s.tanAt(s.uAtDisp(reldisp)));
@@ -170,16 +174,16 @@ public class RoadBuilderTests {
 
         int n = r1.getSegmentNum();
         for(int i = 0; i < n; i ++){
-            Pair<Spline, Double> res = r1.getSegment2Disp(arr1[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r1.getSegment2Disp(arr1[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
             assertPointsEqual(new Point2d(0, 0), s.deriv2ndAt(1));
         }
 
         int m = r2.getSegmentNum();
         for(int i = 0; i < m; i ++){
-            Pair<Spline, Double> res = r2.getSegment2Disp(arr2[i]);
-            Spline s = res.getFirst();
+            Pair<ParametricCurve, Double> res = r2.getSegment2Disp(arr2[i]);
+            ParametricCurve s = res.getFirst();
             Double reldisp = res.getSecond();
             assertPointsEqual(new Point2d(0, 0), s.deriv2ndAt(1));
         }
@@ -210,8 +214,8 @@ public class RoadBuilderTests {
         int m = r2.getSegmentNum();
 
         for(int i = 0; i < n - 1; i ++){
-            Spline s1 = r1.getSegmentByIndex(i);
-            Spline s2 = r1.getSegmentByIndex(i + 1);
+            ParametricCurve s1 = r1.getSegmentByIndex(i);
+            ParametricCurve s2 = r1.getSegmentByIndex(i + 1);
 
             // check position at joints
             assertPointsEqual(s1.pointAt(1), s2.pointAt(0));
@@ -225,8 +229,8 @@ public class RoadBuilderTests {
 
 
         for(int i = 0; i < m - 1; i ++){
-            Spline s1 = r2.getSegmentByIndex(i);
-            Spline s2 = r2.getSegmentByIndex(i + 1);
+            ParametricCurve s1 = r2.getSegmentByIndex(i);
+            ParametricCurve s2 = r2.getSegmentByIndex(i + 1);
 
             // check position at joints
             assertPointsEqual(s1.pointAt(1), s2.pointAt(0));
