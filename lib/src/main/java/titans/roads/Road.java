@@ -4,6 +4,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
+import titans.math.MathUtils;
 import titans.math.ParametricCurve;
 import titans.math.Spline;
 import titans.util.*;
@@ -123,8 +124,8 @@ public class Road {
      * @throws RuntimeException if the displacement is out of road bounds
      */
     public Pair<ParametricCurve, Double> getSegment2Disp(double d){
-        if(d < 0 || d > totalLength){
-            throw new RuntimeException("Displacement out of bounds!");
+        if(!MathUtils.dispInRange(d, 0, totalLength)){
+            throw new DispOfBoundsException(d, 0, totalLength, this);
         }
 
         int index = binSearchRecursive(0, n, d);
@@ -139,8 +140,8 @@ public class Road {
      * @throws RuntimeException if the displacement is out of road bounds
      */
     public Triplet<ParametricCurve, Integer, Double> getSegment3Disp(double d){
-        if(d < 0 || d > totalLength){
-            throw new RuntimeException("Displacement out of bounds!");
+        if(!MathUtils.dispInRange(d, 0, totalLength)){
+            throw new DispOfBoundsException(d, 0, totalLength, this);
         }
 
         int index = binSearchRecursive(0, n, d);
@@ -155,8 +156,8 @@ public class Road {
      * @throws RuntimeException if the displacement is out of road bounds
      */
     public Triplet<ParametricCurve, Double, Boolean> getSegmentCont3Disp(double d){
-        if(d < 0 || d > totalLength){
-            throw new RuntimeException("Displacement out of bounds!");
+        if(!MathUtils.dispInRange(d, 0, totalLength)){
+            throw new DispOfBoundsException(d, 0, totalLength, this);
         }
 
         int index = binSearchRecursive(0, n, d);
@@ -171,8 +172,8 @@ public class Road {
      * @throws RuntimeException if the displacement is out of road bounds
      */
     public int getSegment1Disp(double d){
-        if(d < 0 || d > totalLength){
-            throw new RuntimeException("Displacement out of bounds!");
+        if(!MathUtils.dispInRange(d, 0, totalLength)){
+            throw new DispOfBoundsException(d, 0, totalLength, this);
         }
 
         int index = binSearchRecursive(0, n, d);

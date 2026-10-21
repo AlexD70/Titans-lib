@@ -119,4 +119,17 @@ public class KinematicState {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + String.format(
+                " : {t = %f, pose = %s, vel = %s, acc = %s, omega = %f, eps = %f}",
+                time,
+                (position == null)?("NULL"):(position.toString()),
+                velocity,
+                acceleration,
+                angularVelocity,
+                angularAcceleration
+        );
+    }
 }

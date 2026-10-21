@@ -45,4 +45,12 @@ public class Pose {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+        if(point == null){
+            return super.toString() + String.format(" (NULL %frad)", getTheta());
+        }
+        return super.toString() + String.format(" (%f %f %frad)", getX(), getY(), getTheta());
+    }
 }

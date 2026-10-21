@@ -65,7 +65,7 @@ public class Vector2d {
      */
     public void toPolar(){
         r = FastMath.sqrt(FastMath.pow(x, 2) + FastMath.pow(y, 2));
-        t = MathUtils.normalizeAngle(FastMath.acos(x/r), 0d);
+        t = MathUtils.normalizeAngle(FastMath.atan2(y, x), 0d);
         this.isPolar = true;
     }
 

@@ -32,7 +32,7 @@ public class TrapezoidalMotionProfile {
     int resolution;
     HolonomicKinematics kin;
 
-    private ArrayList<KinematicState> timeProfile = new ArrayList<>();
+    private final ArrayList<KinematicState> timeProfile = new ArrayList<>();
 
     /**
      * Internal ctor that builds an empty motion profile. Should not be used directly unless inheiriting from this class.
@@ -187,7 +187,7 @@ public class TrapezoidalMotionProfile {
         dispProfile.set(0, new Pair<>(0d, initVel));
         dispProfile.set(this.resolution - 1, new Pair<>(road.getLength(), endVel));
 
-        return i;
+        return i - 1;
     }
 
     /**
@@ -298,4 +298,17 @@ public class TrapezoidalMotionProfile {
         return timeProfile.get(index);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder(super.toString() + "\n\t");
+        for(KinematicState state : timeProfile){
+            if(state == null){
+                s.append("NULL!!!\n\t");
+            } else {
+                s.append(state).append("\n\t");
+            }
+        }
+
+        return s.toString();
+    }
 }

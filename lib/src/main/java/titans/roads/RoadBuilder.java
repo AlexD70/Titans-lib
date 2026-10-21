@@ -2,6 +2,7 @@ package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
 import titans.geometry.Pose;
+import titans.math.LineSegment;
 import titans.math.NPoly;
 import titans.geometry.Line2d;
 import titans.geometry.Point2d;
@@ -49,6 +50,7 @@ public class RoadBuilder {
         this.startPoint = startPoint;
         this.startDeriv = startDeriv;
         this.start2ndDeriv = start2ndDeriv;
+        this.prevPoint = startPoint;
     }
 
     /**
@@ -213,26 +215,12 @@ public class RoadBuilder {
      */
     protected RoadBuilder lineConstHeading(Point2d endPoint){
         Vector2d v = endPoint.toVector().diff(startPoint.toVector());
-        double[] xcoeffs = new double[] {0, 0, 0, 0, v.getX(), startPoint.getX()};
-        double[] ycoeffs = new double[] {0, 0, 0, 0, v.getY(), startPoint.getY()};
-
-        Spline s = new Spline();
-        NPoly xpoly = new NPoly(5), ypoly =  new NPoly(5);
-        xpoly.assignCoefficients(xcoeffs);
-        ypoly.assignCoefficients(ycoeffs);
-        s.setSpline(xpoly, ypoly, prevPoint);
-        s.unsetNull();
-        try {
-            s.unsetNull();
-        } catch (Exception e){
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        LineSegment line = new LineSegment(prevPoint, endPoint);
 
         boolean cont = FastMath.abs(startDeriv - Line2d.getSlope(startPoint, endPoint)) < eps;
-        road.addSpline(s, cont);
+        road.addSpline(line, cont);
 
-        startDeriv = Line2d.getSlope(startPoint, endPoint);
+        startDeriv = line.tanAt(1);
         start2ndDeriv = 0;
         prevPoint = startPoint;
         startPoint = endPoint;

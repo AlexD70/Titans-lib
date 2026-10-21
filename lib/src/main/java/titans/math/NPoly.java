@@ -2,6 +2,7 @@ package titans.math;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Represents a polynomial of the n-th order. Provides a way to get the first and second derivatives directly.
@@ -85,5 +86,10 @@ public class NPoly {
     @Nonnull
     public NPoly getSecondDerivative() throws IndexOutOfBoundsException {
         return getDerivative().getDerivative();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + " coefficients: " + Arrays.toString(getCoefficients());
     }
 }

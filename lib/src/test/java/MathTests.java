@@ -99,24 +99,25 @@ public class MathTests {
         assertEquals(tangent2, s2.tanAt(rand));
     }
 
+    @Tag("test") @Test
     void testNullSpline(){
         Spline s = new Spline();
-        assertThrowsExactly(NullSplineErr.class, () -> s.tanAt(1));
-        assertThrowsExactly(NullSplineErr.class, () -> s.uAtDisp(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.derivAt(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.dispAt(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.pointAtDisp(0));
-        assertThrowsExactly(NullSplineErr.class, () -> s.deriv2ndAt(0));
-        assertThrowsExactly(NullSplineErr.class, s::getXCoeffs);
-        assertThrowsExactly(NullSplineErr.class, s::getYCoeffs);
+        assertThrowsExactly(NullSplineErr.class, () -> s.tanAt(1)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, () -> s.uAtDisp(0)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, () -> s.derivAt(0)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, () -> s.dispAt(0)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, () -> s.pointAtDisp(0)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, () -> s.deriv2ndAt(0)).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, s::getXCoeffs).printStackTrace();
+        assertThrowsExactly(NullSplineErr.class, s::getYCoeffs).printStackTrace();
 
-        assertThrows(RuntimeException.class, s::unsetNull);
+        assertThrows(IllegalCallerException.class, s::unsetNull).printStackTrace();
         NPoly xpoly = new NPoly(5);
         xpoly.assignCoefficients(1, 1, 1, 1, 1, 1);
         NPoly ypoly = new NPoly(5);
         ypoly.assignCoefficients(0, 0, 1, 0, 1, 0);
         assertDoesNotThrow(() -> s.setSpline(xpoly, ypoly, new Point2d(0, 0)));
-        assertThrows(RuntimeException.class, () -> s.setSpline(xpoly, ypoly, new Point2d(0, 0)));
+        assertThrows(IllegalCallerException.class, () -> s.setSpline(xpoly, ypoly, new Point2d(0, 0))).printStackTrace();
     }
 
     @Tag("test") @Test

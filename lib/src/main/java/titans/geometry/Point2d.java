@@ -112,4 +112,9 @@ public class Point2d {
     public static double dist(Point2d a, Point2d b){
         return FastMath.sqrt(FastMath.pow(a.x - b.x, 2) + FastMath.pow(a.y - b.y, 2));
     }
+
+    @Override
+    public String toString() {
+        return super.toString() + String.format(" (%f, %f)", x, y);
+    }
 }

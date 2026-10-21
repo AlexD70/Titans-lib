@@ -18,10 +18,12 @@ import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 
 import titans.util.NullSplineErr;
-import titans.util.OutOfBoundsException;
+import titans.util.DispOfBoundsException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import titans.math.MathUtils;
 
 /**
  * A class representing splines which are a type of parametric curves
@@ -101,6 +103,7 @@ public class Spline implements ParametricCurve {
 
         this.setSpline(xpoly, ypoly, start);
 
+        this.startPoint = start;
         this.endPoint = end;
         this.unsetNull();
     }
@@ -112,7 +115,7 @@ public class Spline implements ParametricCurve {
      * the user must first use the {@link #setSpline(NPoly, NPoly, Point2d)} function on the object. On fail,
      * the function will throw a {@code RuntimeException}. The spline {@code length} and {@code endPoint} will
      * automatically be computed from the polynomials given.
-     * @throws RuntimeException on fail <3
+     * @throws IllegalCallerException on fail <3
      */
     public void unsetNull() {
         if(!isNull){
@@ -129,7 +132,7 @@ public class Spline implements ParametricCurve {
                 endPoint = pointAt(1);
             }
         } else {
-            throw new RuntimeException("Cannot unset null with empty polynomials!");
+            throw new IllegalCallerException("cannot unset null for a non-null spline: " + this);
         }
     }
 
@@ -138,12 +141,12 @@ public class Spline implements ParametricCurve {
      * @param xpoly a polynomial x(u), u in [0, 1]
      * @param ypoly a polynomial y(u), u in [0, 1]
      * @param startPoint the start point x(0), y(0)
-     * @throws RuntimeException if the spline was created using {@link #Spline(Point2d, Point2d, Point2d, Point2d, Point2d, Point2d)}
+     * @throws IllegalCallerException if the spline was created using {@link #Spline(Point2d, Point2d, Point2d, Point2d, Point2d, Point2d)}
      * or if it was previously initialized with this function
      */
     public void setSpline(NPoly xpoly, NPoly ypoly, Point2d startPoint) {
         if(!isNull){
-            throw new RuntimeException("Do not modify non-null splines!");
+            throw new IllegalCallerException("cannot setSpline for an already non-null spline: " + this);
         }
 
         this.xpoly = xpoly;
@@ -159,7 +162,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Point2d getStartPoint(){
         if (isNull) {
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return startPoint;
     }
@@ -168,7 +171,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Point2d getEndPoint(){
         if (isNull) {
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return endPoint;
     }
@@ -181,7 +184,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Double[] getXCoeffs(){
         if (isNull) {
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return xpoly.getCoefficients();
     }
@@ -189,7 +192,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Double[] getYCoeffs(){
         if (isNull) {
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return ypoly.getCoefficients();
     }
@@ -206,11 +209,11 @@ public class Spline implements ParametricCurve {
     @Override @Nonnull
     public Point2d pointAt(double u){
         if(isNull) {
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
-        if(u == 0){
+        if(u == 0 && startPoint != null){
             return startPoint;
-        } else if (u == 1){
+        } else if (u == 1 && endPoint != null){
             return endPoint;
         }
 
@@ -227,11 +230,11 @@ public class Spline implements ParametricCurve {
     @Override
     public double dispAt(double u){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         if(u == 0){
             return 0;
-        } else if (u == 1){
+        } else if (u == 1 && length != -1){
             return length;
         }
 
@@ -265,7 +268,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Point2d derivAt(double u) {
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return new Point2d(xderiv.apply(u), yderiv.apply(u));
     }
@@ -274,7 +277,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Point2d deriv2ndAt(double u){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return new Point2d(
                 x2ndderiv.apply(u),
@@ -291,7 +294,7 @@ public class Spline implements ParametricCurve {
     @Override
     public double tanAt(double u){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         Vector2d deriv = derivAt(u).toVector();
         return deriv.getT();
@@ -308,7 +311,7 @@ public class Spline implements ParametricCurve {
     @Nonnull
     public Vector2d tanVecAt(double u){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         return derivAt(u).toVector().norm();
     }
@@ -322,15 +325,15 @@ public class Spline implements ParametricCurve {
      * @param d displacement in cm
      * @return internal parameter between [0, 1]
      * @throws NullSplineErr see class description
-     * @throws OutOfBoundsException if displacement is negative or greater than {@code length}
+     * @throws DispOfBoundsException if displacement is negative or greater than {@code length}
      */
     @Override
     public double uAtDisp(double d){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
-        if(length != -1 && (d > length || d < 0)){
-            throw new OutOfBoundsException();
+        if(length != -1 && !MathUtils.dispInRange(d, 0, length)){
+            throw new DispOfBoundsException(d, 0, length, this);
         }
 
         var fx = new UnivariateFunction() {
@@ -360,13 +363,13 @@ public class Spline implements ParametricCurve {
 
     /**
      * @throws NullSplineErr see class description
-     * @throws OutOfBoundsException see {@link #uAtDisp(double)}
+     * @throws DispOfBoundsException see {@link #uAtDisp(double)}
      */
     @Override
     @Nonnull
     public Point2d pointAtDisp(double d){
         if(isNull){
-            throw new NullSplineErr();
+            throw new NullSplineErr(this);
         }
         if(d == 0){
             return startPoint;
@@ -374,4 +377,11 @@ public class Spline implements ParametricCurve {
         return pointAt(uAtDisp(d));
     }
 
+    @Override
+    public String toString() {
+        if (isNull) {
+            return super.toString() + "\n\tlength = -1" + "\n\txpoly null" + "\n\typoly null" + "\n\tstartPoint null" + "\n\tendPoint null";
+        }
+        return super.toString() + "\n\tlength = " + getLength() + "\n\txpoly " + xpoly.toString() + "\n\typoly " + ypoly.toString() + "\n\tstartPoint " + startPoint.toString() + "\n\tendPoint " + endPoint.toString();
+    }
 }

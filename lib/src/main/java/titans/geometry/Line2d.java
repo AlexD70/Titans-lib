@@ -23,7 +23,7 @@ public class Line2d {
     public Line2d(){}
     public Line2d(Point2d a, Point2d b){
         if(a.equals(b)){
-            throw new RuntimeException("Line cannot be generated from identical points.");
+            throw new IllegalArgumentException(String.format("Line object cannot be created from identical points: %s, %s.", a.toString(), b.toString()));
         }
 
         this.a = a;

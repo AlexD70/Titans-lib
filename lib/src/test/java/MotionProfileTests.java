@@ -51,6 +51,9 @@ public class MotionProfileTests {
             KinematicState ret1 = prof1.getStateByIdx(i);
             KinematicState ret2 = prof2.getStateByIdx(i);
 
+            //System.out.print(prof1);
+            //System.out.print("\n");
+            //System.out.print(prof2);
             assertEquals(ret1, ret2);
         }
     }
@@ -83,7 +86,7 @@ public class MotionProfileTests {
     // i have a feeling it doesnt test anything useful
     // and ive no idea how to fix it
     // currently accumulates error due to imprecise dist calculation
-    @Tag("test") @Test @Disabled
+    @Tag("test") @Test
     void checkConstraints(){
          TrapezoidalMotionProfile prof = prof1;
          int n = prof.getProfileSize();
