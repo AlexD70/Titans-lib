@@ -28,7 +28,7 @@ import java.util.*;
  * </p>
  * <p>
  *     The class has a hardcoded segment limit: {@code MAX_SEGMENTS = 30}. The segments should be added using either
- *     {@link #addSpline(Spline, boolean)} or {@link #addSplineWithHeadingInterp(Spline, boolean, HeadingInterpolation)}.
+ *     {@link #addSegment(ParametricCurve, boolean)} or {@link #addSegment(ParametricCurve, boolean, HeadingInterpolation)}.
  *     After adding, a segment cannot be removed or otherwise modified unless the class is inherited from.
  * </p>
  *
@@ -62,7 +62,7 @@ public class Road {
      * @param continuous a boolean showing if path continuity is broken or not
      * @throws RuntimeException if segment count exceeds {@code MAX_SEGMENTS}
      */
-    public void addSpline(Spline s, boolean continuous){
+    public void addSegment(ParametricCurve s, boolean continuous){
         if(n == MAX_SEGMENTS){
             throw new RuntimeException("Max segment count exceeded for path!");
         }
@@ -83,7 +83,7 @@ public class Road {
      * @param interp a heading interpolation object
      * @throws RuntimeException if segment count exceeds {@code MAX_SEGMENTS}
      */
-    public void addSplineWithHeadingInterp(Spline s, boolean continuous, HeadingInterpolation interp) {
+    public void addSegment(ParametricCurve s, boolean continuous, HeadingInterpolation interp) {
         if(n == MAX_SEGMENTS){
             throw new RuntimeException("Max segment count exceeded for path!");
         }

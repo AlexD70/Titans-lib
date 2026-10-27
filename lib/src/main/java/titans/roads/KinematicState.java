@@ -1,6 +1,7 @@
 package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math3.util.MathUtils;
 import titans.geometry.Point2d;
 import titans.geometry.Pose;
 import titans.geometry.Vector2d;
@@ -86,20 +87,26 @@ public class KinematicState {
     }
 
     public static KinematicState getLinearInterpolation(KinematicState first, KinematicState second, double actualTime){
-        Vector2d poseSum = first.getPos().getVector().add(second.getPos().getVector());
-        Vector2d velocitySum = first.getVel().add(second.getVel());
-        Vector2d accelerationSum = first.getAcc().add(second.getAcc());
-
         double interpolationFactor = FastMath.abs((actualTime - first.getTime()) / (second.getTime() - first.getTime()));
 
-        double angleInterp = (first.getPos().getTheta() + second.getPos().getTheta()) * interpolationFactor;
-        double angularVelInterp = (first.angularVelocity + second.angularVelocity) * interpolationFactor;
-        double angularAccInterp = (first.angularAcceleration + second.angularAcceleration) * interpolationFactor;
+        Vector2d poseSum = first.getPos().getVector()
+                .mlt(1 - interpolationFactor)
+                .add(second.getPos().getVector().mlt(interpolationFactor));
+        Vector2d velocitySum = first.getVel()
+                .mlt(1 - interpolationFactor)
+                .add(second.getVel().mlt(interpolationFactor));
+        Vector2d accelerationSum = first.getAcc()
+                .mlt(1 - interpolationFactor)
+                .add(second.getAcc().mlt(interpolationFactor));
 
-        poseSum.mlt(interpolationFactor);
-        velocitySum.mlt(interpolationFactor);
-        accelerationSum.mlt(interpolationFactor);
 
+        double angleInterp = first.getPos().getTheta() * (1 - interpolationFactor) + second.getPos().getTheta() * interpolationFactor;
+        double angularVelInterp = first.angularVelocity * (1 - interpolationFactor) + second.angularVelocity * interpolationFactor;
+        double angularAccInterp = first.angularAcceleration * (1 - interpolationFactor) + second.angularAcceleration * interpolationFactor;
+
+        angleInterp = MathUtils.normalizeAngle(angleInterp, 0d);
+        angularVelInterp = MathUtils.normalizeAngle(angularVelInterp, 0d);
+        angularAccInterp = MathUtils.normalizeAngle(angularAccInterp, 0d);
         return new KinematicState(actualTime, poseSum.toPoint().addAngle(angleInterp), velocitySum, accelerationSum, angularVelInterp, angularAccInterp);
     }
 

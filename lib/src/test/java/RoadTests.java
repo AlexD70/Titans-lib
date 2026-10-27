@@ -32,8 +32,8 @@ public class RoadTests {
         assertDoesNotThrow(() -> c1.setSpline(c1x, c1y, new Point2d(c1x.apply(0), c1y.apply(0))));
         assertDoesNotThrow(() -> c2.setSpline(c2x, c2y, new Point2d(c2x.apply(0), c2y.apply(0))));
 
-        road.addSpline(c1, false);
-        road.addSpline(c2, false);
+        road.addSegment(c1, false);
+        road.addSegment(c2, false);
     }
 
     @Tag("test") @Test

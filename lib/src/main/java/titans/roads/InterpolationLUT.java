@@ -14,7 +14,7 @@ public class InterpolationLUT {
 
     private int first = 0, second = 1;
     private static final double eps = 0.0001;
-    private int maxIter = 3;
+    private int maxIter = Integer.MAX_VALUE;
 
     public double getTime(int index){
         return getState(index).getTime();
@@ -24,20 +24,63 @@ public class InterpolationLUT {
         return profile.getStateByIdx(index);
     }
 
-    public KinematicState getStateAt(double t){
+    public KinematicState getStateAt(double t) {
+        int left = 0;
+        int right = profile.getProfileSize() - 1;
+
+        // Check bounds
+        if (t <= getTime(left) + eps) return getState(left);
+        if (t >= getTime(right) - eps) return getState(right);
+
+        // Linear / Step-wise search if starting near predictable indices,
+        // or binary search for arbitrary lookups:
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            double midTime = getTime(mid);
+
+            if (FastMath.abs(t - midTime) <= eps) {
+                return getState(mid);
+            }
+
+            if (midTime < t) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        // `right` is now the index of the point just before `t`, and `right + 1` is just after `t`
+        int idx1 = right;
+        int idx2 = right + 1;
+
+        double t1 = getTime(idx1);
+        double t2 = getTime(idx2);
+
+        KinematicState state1 = getState(idx1);
+        KinematicState state2 = getState(idx2);
+
+        // If getLinearInterpolation requires timestamp t:
+        return KinematicState.getLinearInterpolation(state1, state2, t);
+
+        // OR if getLinearInterpolation requires alpha (0.0 to 1.0):
+        // double alpha = (t - t1) / (t2 - t1);
+        // return KinematicState.getLinearInterpolation(state1, state2, alpha);
+    }
+
+    public KinematicState getStateAt2(double t){
         double time1 = this.getTime(first);
         double time2 = this.getTime(second);
 
         int iter = 0;
         while(iter < maxIter) {
-            if (FastMath.abs(t - first) <= eps) {
+            if (FastMath.abs(t - time1) <= eps) {
                 // do not go to next here
                 return getState(first);
 
-            } else if (FastMath.abs(t - second) <= eps) {
+            } else if (FastMath.abs(t - time2) <= eps) {
                 first += 1;
                 second += 1;
-                return getState(second);
+                return getState(second - 1);
 
             } else if (time1 < t && t < time2) {
                 // do not go to next in this branch

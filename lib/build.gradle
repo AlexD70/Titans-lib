@@ -11,9 +11,6 @@ plugins {
     id 'java-library'
     id 'maven-publish'
 }
-plugins {
-    id "io.github.DiLilloDaniele.gradle-python-testing" version "1.4.4"
-}
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -39,12 +36,8 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 
+    //withJavadocJar()
     withSourcesJar()
-}
-
-pytest {
-    testSrc.set("src/test/python") // test folder that contains all python tests
-    useVirtualEnv.set(true) // true if you use a virtual environment or global libraries
 }
 
 tasks.named('test', Test) {
@@ -55,8 +48,7 @@ tasks.named('test', Test) {
     }
 }
 
-tasks.register('visualtest', Test)
-tasks.named('visualtest', Test){
+tasks.register('visualtest', Test) {
     useJUnitPlatform {
         includeTags("visual")
         excludeTags("benchmark", "test")

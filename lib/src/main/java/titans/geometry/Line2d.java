@@ -39,7 +39,7 @@ public class Line2d {
     }
 
     public Point2d pointAtParam(double u){
-        return new Point2d((a.x + u * (b.x - a.x)), (b.y + u * (b.y - a.y)));
+        return new Point2d((a.x + u * (b.x - a.x)), (a.y + u * (b.y - a.y)));
     }
 
     public static double getSlope(Point2d a, Point2d b){
