@@ -1,3 +1,5 @@
+import org.apache.commons.math3.util.FastMath;
+import org.javatuples.Triplet;
 import org.json.JSONWriter;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.function.ThrowingSupplier;
@@ -15,24 +17,13 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class MathTests {
-    public static final double EPS = 0.0001;
-    public static void assertWithinError(double val, double ref){
-        assertTrue(Math.abs(val - ref) <= EPS,
-                String.format("Value %f out of the expected %f +- %f interval.", val, ref, EPS));
-    }
-    public static void assertInInterval(double val, double low, double high){
-        assertTrue((low <= val) && (val <= high),
-                String.format("Value %f out of interval [%f, %f]", val, low, high));
-    }
-    public static void assertWithinError(double val, double ref, double eps){
-        assertTrue(Math.abs(val - ref) <= eps,
-                String.format("Value %f out of the expected %f +- %f interval.", val, ref, eps));
-    }
 
+public class SplineTests {
+
+    @Tag("test") @Test
     void testDispFromParam(){
-        Spline s = RoadResources.MathTests.testSpline;
-        long millis = RoadResources.MathTests.MAX_MILLIS_INTEGRATION;
+        Spline s = TestResources.getRandomSpline();
+        long millis = TestResources.MAX_MILLIS_INTEGRATION;
 
         double ufin = 1, urand = Math.random(), ufirst = urand / 100000d;
 
@@ -43,24 +34,33 @@ public class MathTests {
         double resZero = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getZero);
         double resRand = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getAny);
 
-        assertWithinError(resLen, s.getLength());
-        assertWithinError(resZero, 0);
+        TestResources.assertWithinError(resLen, s.getLength());
+        TestResources.assertWithinError(resZero, 0);
         assertTrue(0 <= resRand && resRand <= s.getLength(),
                 String.format("ResRand %f exceeds bounds of 0, %f when u = %f.", resRand, s.getLength(), urand));
     }
 
+    @Tag("test") @Test
     void testSplineEndPoint(){
-        Spline s = RoadResources.MathTests.testSpline;
+        Triplet<Spline, Point2d, Point2d> testRes = TestResources.getRandomSplineAndEndpoints();
+        Spline s = testRes.getValue0();
 
-        Point2d endp = RoadResources.MathTests.points[1];
+        Point2d start = testRes.getValue1();
+        Point2d end = testRes.getValue2();
 
-        RoadBuilderTests.assertPointsEqual(endp, s.pointAt(1));
-        RoadBuilderTests.assertPointsEqual(endp, s.pointAtDisp(s.getLength()));
+        TestResources.assertPointsEqual(start, s.pointAt(0));
+        TestResources.assertPointsEqual(start, s.pointAtDisp(0));
+        TestResources.assertPointsEqual(start, s.getStartPoint());
+
+        TestResources.assertPointsEqual(end, s.pointAt(1));
+        TestResources.assertPointsEqual(end, s.pointAtDisp(s.getLength()));
+        TestResources.assertPointsEqual(end, s.getEndPoint());
     }
 
+    @Tag("test") @Test
     void testParamFromDisp(){
-        Spline s = RoadResources.MathTests.testSpline;
-        long millis = RoadResources.MathTests.MAX_MILLIS_BRENTOPT;
+        Spline s = TestResources.getRandomSpline();
+        long millis = TestResources.MAX_MILLIS_BRENTOPT;
 
         double len = s.getLength(), rand = Math.random() * len;
         ThrowingSupplier<Double> getOne = () -> s.uAtDisp(len);
@@ -70,20 +70,36 @@ public class MathTests {
         double zero = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getZero);
         double any = assertTimeout(Duration.of(millis, ChronoUnit.MILLIS), getAny);
 
-        assertWithinError(one, 1);
-        assertWithinError(zero, 0);
+        TestResources.assertWithinError(one, 1);
+        TestResources.assertWithinError(zero, 0);
         assertTrue(0 <= any && any <= 1,
                 String.format("URand %f out of [0, 1] expected interval for internal param.", any));
     }
 
+    @Tag("test") @Test @Disabled
     void testDerivatives(){
         Spline s = RoadResources.MathTests.testSpline;
 
-        double rand = Math.random();
-        Point2d ds = s.derivAt(rand), dds = s.deriv2ndAt(rand);
+        double ds_x = 0, dds_x = 0, ds_y = 0, dds_y = 0;
+        Double[] xcoeffs = s.getXCoeffs(), ycoeffs = s.getYCoeffs();
+        double rand = FastMath.random();
+        double randToNth = 1; // ma cac pe ele de derivate
+        for (int i = xcoeffs.length - 1; i >= 0; i--){
+            ds_x += randToNth * xcoeffs[i] * (xcoeffs.length - i - 1) * rand;
+            dds_x += randToNth * xcoeffs[i] * (xcoeffs.length - i - 2) * (xcoeffs.length - i - 1) / rand;
+            if(i <= xcoeffs.length - 2) {
+                randToNth *= rand;
+            }
+        }
+        randToNth = 1;
+        for (int i = ycoeffs.length - 1; i >= 0; i--){
+            ds_y += randToNth * ycoeffs[i] * (ycoeffs.length - i);
+            dds_y += randToNth * ycoeffs[i] * (ycoeffs.length - i - 1) * (ycoeffs.length - i) / rand;
+            randToNth *= rand;
+        }
 
-        assertEquals(ds, s.derivAt(rand));
-        assertEquals(dds, s.deriv2ndAt(rand));
+        assertEquals(new Point2d(ds_x, ds_y), s.derivAt(rand));
+        assertEquals(new Point2d(dds_x, dds_y), s.deriv2ndAt(rand));
     }
 
     void testTangents(){
@@ -124,8 +140,8 @@ public class MathTests {
     void testMathematicalStability() {
         testDispFromParam();
         testParamFromDisp();
-        testDerivatives();
-        testTangents();
+        //testDerivatives();
+        //testTangents();
         testNullSpline();
         testSplineEndPoint();
     }

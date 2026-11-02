@@ -84,6 +84,10 @@ public class Vector2d {
         return this;
     }
 
+    public double dot(Vector2d other){
+        return this.x * other.x + this.y * other.y;
+    }
+
     public double getX(){
         return x;
     }
@@ -196,5 +200,14 @@ public class Vector2d {
      */
     public Vector2d add(Vector2d other){
         return new Vector2d(this.x + other.x, this.y + other.y);
+    }
+
+    @Override
+    public String toString() {
+        if(isPolar) {
+            return super.toString() + String.format("(%f, %f) - (r: %f, t: %f)", x, y, r, t);
+        } else {
+            return super.toString() + String.format("(%f, %f)", x, y);
+        }
     }
 }

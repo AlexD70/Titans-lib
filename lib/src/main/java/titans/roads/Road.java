@@ -47,7 +47,7 @@ public class Road {
 
     private double totalLength = 0;
     private int n = 0;
-    private double eps = 0.005;
+    private double eps = 0.05;
 
     /**
      * Builds a new {@code Road} object with an empty segment list.
@@ -235,6 +235,10 @@ public class Road {
         double u = s.uAtDisp(output.getSecond());
         Vector2d vec1stDeriv = s.derivAt(u).toVector();
         Vector2d vec2ndDeriv = s.deriv2ndAt(u).toVector();
+
+        if(vec1stDeriv.abs() < 1e-3){
+            return Double.POSITIVE_INFINITY;
+        }
 
         return vec1stDeriv.cross(vec2ndDeriv) / FastMath.pow(vec1stDeriv.abs(), 3);
     }

@@ -35,7 +35,7 @@ public class LineSegment implements ParametricCurve {
 
     @Override
     public @NonNull Point2d pointAt(double u) {
-        if(u < 0 || u > 1){
+        if(!MathUtils.dispInRange(u, 0, 1)){
             throw new DispOfBoundsException(u, 0, 1, this);
         }
 
@@ -50,7 +50,7 @@ public class LineSegment implements ParametricCurve {
 
     @Override
     public double dispAt(double u) {
-        if(u < 0 || u > 1){
+        if(!MathUtils.dispInRange(u, 0, 1)){
             throw new DispOfBoundsException(u, 0, 1, this);
         }
 
@@ -59,7 +59,7 @@ public class LineSegment implements ParametricCurve {
 
     @Override
     public @NonNull Point2d derivAt(double u) {
-        if(u < 0 || u > 1){
+        if(!MathUtils.dispInRange(u, 0, 1)){
             throw new DispOfBoundsException(u, 0, 1, this);
         }
 
@@ -68,7 +68,7 @@ public class LineSegment implements ParametricCurve {
 
     @Override
     public @NonNull Point2d deriv2ndAt(double u) {
-        if(u < 0 || u > 1){
+        if(!MathUtils.dispInRange(u, 0, 1)){
             throw new DispOfBoundsException(u, 0, 1, this);
         }
 

@@ -46,6 +46,10 @@ public class Line2d {
         return (new Line2d(a, b)).slope;
     }
 
+    public static double getLineAngle(Point2d a, Point2d b){
+        return FastMath.atan2(a.getY() - b.getY(), a.getX() - b.getX());
+    }
+
     // solves the equation system:
     // x = xA + t(xB - xA)
     // y = yA + t(yB - yA)

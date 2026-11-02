@@ -87,7 +87,16 @@ public class KinematicState {
     }
 
     public static KinematicState getLinearInterpolation(KinematicState first, KinematicState second, double actualTime){
-        double interpolationFactor = FastMath.abs((actualTime - first.getTime()) / (second.getTime() - first.getTime()));
+        double interpolationFactor = (actualTime - first.getTime()) / (second.getTime() - first.getTime());
+        if(interpolationFactor < 0){
+            interpolationFactor = 0;
+        } else if (interpolationFactor > 1) {
+            interpolationFactor = 1;
+        }
+
+        if(FastMath.abs(first.getTime() - second.getTime()) < 1e-6){
+            return first;
+        }
 
         Vector2d poseSum = first.getPos().getVector()
                 .mlt(1 - interpolationFactor)

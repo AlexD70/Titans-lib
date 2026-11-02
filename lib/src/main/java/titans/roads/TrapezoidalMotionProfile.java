@@ -90,8 +90,8 @@ public class TrapezoidalMotionProfile {
 
         double space = dist / (res - 1);
         linspace[0] = start;
-        for(int i = 1; i < res - 1; i++){
-            linspace[i] = linspace[i - 1] + space;
+        for(int i = 1; i < res; i++){
+            linspace[i] = linspace[0] + i * space;
         }
         if(res > 1) {
             linspace[res - 1] = end;
@@ -131,63 +131,34 @@ public class TrapezoidalMotionProfile {
     private int sampleDisplacementProfile(ArrayList<Pair<Double, Double>> dispProfile, double initVel, double initAcc, double endVel){
         double[] linspaceDisplacement = linearSpace(0, road.getLength(), this.resolution);
 
-        // obtain the necessary parameters from the robot kinematics class
-        double max_vel = this.kin.maxVel();
-        double max_ang_vel = this.kin.maxAngVel();
-        double max_ang_acc = this.kin.maxAngAcc();
-        double max_acc = this.kin.maxAcc();
+        int lastSgm = 0;
+        Vector2d prevTan = null;
+        // add the start
+        dispProfile.add(0, new Pair<>(0d, initVel));
 
-        // add points between start and end on the displacement profile
-        int i = 1;
-        int sgm_num = 0, last_sgm = 0;
-        for(double d : linspaceDisplacement){
-            // get road curvature
-            Double curvature = road.getCurvatureAtDisp(d);
-            if(curvature == null){
-                throw new RuntimeException("FATAL ERROR WHILE BUILDING MOTION PROFILE. ABORTING");
-            }
-
-            // get road tangent vector absolute value
-            Point2d roadDeriv = road.getDerivAtDisp(d);
-            double tanVecAbs = 0;
-            if(roadDeriv == null){
-                tanVecAbs = Double.POSITIVE_INFINITY;
-            } else {
-                tanVecAbs = roadDeriv.toVector().abs();
-            }
-
-            double angVelLimitedByCurvature = max_ang_vel / FastMath.abs(curvature * 2);
-            double velLimitedByMaxAcc = Double.POSITIVE_INFINITY;
-
-            sgm_num = road.getSegment1Disp(d);
-            if(sgm_num != last_sgm){
-                last_sgm = sgm_num;
-                double waypoint_dist = road.lenarr[sgm_num] - road.lenarr[sgm_num - 1];
-                double time = FastMath.sqrt(2 * waypoint_dist / max_acc);
-                velLimitedByMaxAcc = max_acc * time;
-
-                // continuity is broken so robot should stop
-                if(Double.isInfinite(tanVecAbs)){
-                    velLimitedByMaxAcc = 0;
-                }
-            }
-
-            if (Double.isNaN(angVelLimitedByCurvature) || Double.isInfinite(angVelLimitedByCurvature) || curvature < 0.01){
+        for(int i = 1; i < linspaceDisplacement.length; i++){
+            //double angVelLimitedByCurvature = max_ang_vel / FastMath.abs(curvature * 2);
+            /*if (Double.isNaN(angVelLimitedByCurvature) || Double.isInfinite(angVelLimitedByCurvature) || curvature < 0.01){
                 angVelLimitedByCurvature = max_vel + 1;
+            }*/
+
+            double d = linspaceDisplacement[i];
+            dispProfile.add(i, new Pair<>(d, kin.getVelocityLimit(d, road, prevTan, lastSgm)));
+
+            Point2d pointDeriv = road.getDerivAtDisp(d);
+            if(pointDeriv == null){
+                prevTan = null;
+            } else {
+                prevTan = pointDeriv.toVector().norm();
             }
-            if(Double.isInfinite(velLimitedByMaxAcc)){
-                velLimitedByMaxAcc = max_vel + 1;
-            }
-            double plannedVel = FastMath.min(FastMath.min(max_vel, angVelLimitedByCurvature), velLimitedByMaxAcc);
-            dispProfile.add(new Pair<>(d, plannedVel));
-            i++;
+
+            lastSgm = road.getSegment1Disp(d);
         }
 
-        // add the end and the start to the displacement profile
-        dispProfile.set(0, new Pair<>(0d, initVel));
-        dispProfile.set(this.resolution - 1, new Pair<>(road.getLength(), endVel));
+        // add the end to the displacement profile
+        dispProfile.add(this.resolution - 1, new Pair<>(road.getLength(), endVel));
 
-        return i - 1;
+        return linspaceDisplacement.length - 1;
     }
 
     /**
@@ -203,11 +174,16 @@ public class TrapezoidalMotionProfile {
 
             double currentVel = current.getValue1(), prevVel = prev.getValue1();
             if(currentVel > prevVel){
-                double d = current.getValue0();
-                double deltaDisp = d - prev.getValue0();
+                double d1 = current.getValue0(), d2 = prev.getValue0();
+                double deltaDisp = d1 - d2;
 
-                double maxVel = FastMath.sqrt(FastMath.pow(prevVel, 2) + 2 * deltaDisp * this.kin.maxAcc());
-                dispProfile.set(j, new Pair<>(d, FastMath.min(maxVel, currentVel)));
+                double accGuess = kin.getLinearAcceleration(prevVel, road.getCurvatureAtDisp(d1));
+                double velGuess = FastMath.sqrt(prevVel * prevVel + 2 * deltaDisp * accGuess);
+                velGuess = FastMath.min(velGuess, currentVel);
+                double availableLinearAcc = kin.getLinearAcceleration(currentVel, road.getCurvatureAtDisp(d1));
+
+                double maxVel = FastMath.sqrt(FastMath.pow(prevVel, 2) + 2 * deltaDisp * availableLinearAcc);
+                dispProfile.set(j, new Pair<>(d1, FastMath.min(maxVel, currentVel)));
             }
         }
     }
@@ -229,7 +205,12 @@ public class TrapezoidalMotionProfile {
                 double d1 = current.getValue0(), d2 = next.getValue0();
                 double deltaDisp = d1 - d2;
 
-                double maxVel = FastMath.sqrt(FastMath.pow(currentVel, 2) + 2 * deltaDisp * this.kin.maxAcc());
+                double accGuess = kin.getLinearAcceleration(currentVel, road.getCurvatureAtDisp(d2));
+                double velGuess = FastMath.sqrt(FastMath.pow(currentVel, 2) + 2 * deltaDisp * accGuess);
+                velGuess = FastMath.min(velGuess, nextVel);
+                double availableLinearAcc = kin.getLinearAcceleration(nextVel, road.getCurvatureAtDisp(d2));
+
+                double maxVel = FastMath.sqrt(FastMath.pow(currentVel, 2) + 2 * deltaDisp * availableLinearAcc);
                 dispProfile.set(j - 1, new Pair<>(d2, FastMath.min(maxVel, nextVel)));
             }
         }
@@ -247,17 +228,18 @@ public class TrapezoidalMotionProfile {
         // turn to time based profile
         this.timeProfile.ensureCapacity(n);
 
+        Vector2d tanVec = road.getDerivAtDispNonnull(0).toVector();
+        tanVec.norm();
+
         this.addToProfile(
                 0d,
                 road.pointAtDisp(0),
-                initVel,
-                initVel,
-                initAcc,
-                initAcc
+                initVel * tanVec.getX(),
+                initVel * tanVec.getY(), // project the velocity and acc on the tangent vector
+                initAcc * tanVec.getX(),
+                initAcc * tanVec.getY()
         );
 
-        Vector2d tanVec = road.getDerivAtDispNonnull(0).toVector();
-        tanVec.norm();
 
         double lastTime = 0, time = 0;
         double lastVel, currentVel;
@@ -267,15 +249,35 @@ public class TrapezoidalMotionProfile {
             currentVel = current.getValue1();
             lastVel = last.getValue1();
             double ds = current.getValue0() - last.getValue0();
-            double dt = FastMath.abs(ds / ((currentVel + lastVel) / 2)); // ds / med_vel
+
+            double dt = 0;
+            if(FastMath.abs(currentVel + lastVel) < 1e-6){
+                dt = FastMath.sqrt(2 * ds / this.kin.maxAcc());
+            } else {
+                dt = FastMath.abs(ds / ((currentVel + lastVel) / 2)); // ds / med_vel
+            }
+
             time += dt;
 
             tanVec = road.getDerivAtDispNonnull(current.getValue0()).toVector();
             tanVec.norm(); // normalize the vector
 
             double vx = currentVel * tanVec.getX(), vy = currentVel * tanVec.getY();
-            double accel = (currentVel - lastVel) / (time - lastTime);
-            double ax = accel * tanVec.getX(), ay = accel * tanVec.getY();
+
+            double accel = (currentVel - lastVel) / dt;
+            Double curv = road.getCurvatureAtDisp(current.getValue0());
+            double centripetalAccel = 0;
+            if (curv != null) {
+                centripetalAccel = FastMath.pow(currentVel, 2) * curv;
+            }
+
+            // Tangential component
+            double ax = accel * tanVec.getX();
+            double ay = accel * tanVec.getY();
+
+            // Add Normal (Centripetal) component: perpendicular to tangent
+            ax += centripetalAccel * (-tanVec.getY());
+            ay += centripetalAccel * tanVec.getX();
 
             Point2d point = road.pointAtDisp(current.getValue0());
             this.addToProfile(

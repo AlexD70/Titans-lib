@@ -21,7 +21,8 @@ public class HeadingInterpolation {
     public static HeadingInterpolation fromAngles(Vector2d startHeading, double deltaAng, double startTan, double endTan, boolean isLinear) {
         HeadingInterpolation interpolation = new HeadingInterpolation();
         interpolation.startHeading = startHeading;
-        interpolation.endHeading = startHeading.rotate(deltaAng); // fix me
+        interpolation.endHeading = new Vector2d(startHeading.getX(), startHeading.getY());
+        interpolation.endHeading.rotate(deltaAng);
         Vector2d delta = interpolation.endHeading.diff(startHeading);
         interpolation.isConst = false;
 
@@ -40,7 +41,7 @@ public class HeadingInterpolation {
             //double dist = Point2d.dist(startHeading.toPoint(), interpolation.endHeading.toPoint());
             //Point2d startDeriv = Vector2d.fromPolar(dist, startTan).toPoint();
             //Point2d endDeriv = Vector2d.fromPolar(dist, endTan).toPoint();
-            startHeading.toPolar();
+            //startHeading.toPolar();
             interpolation.hermite = new HermiteInterpolation(startHeading.getT(), startHeading.getT() + deltaAng, startTan, endTan);
             //interpolation.interp = Spline.buildSpline6(startHeading.toPoint(), interpolation.endHeading.toPoint(), startDeriv, endDeriv, new Point2d(), new Point2d());
             interpolation.isLinear = false;
@@ -57,7 +58,7 @@ public class HeadingInterpolation {
         }
 
         Vector2d ret = this.interp.pointAt(u).toVector();
-        ret.toPolar();
+        //ret.toPolar();
         return ret;
     }
 
