@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
+import titans.math.Spline;
 import titans.roads.*;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,6 +21,12 @@ public class ConstraintTests {
 
         Pair<TrapezoidalMotionProfile, Road> res = TestResources.getRandomProfile(constr, 2500, 10, 10);
         TrapezoidalMotionProfile prof = res.getValue0();
+
+        System.out.println("Points used: " + Point2d.getPointCounter());
+        System.out.println("Vectors used: " + Vector2d.getVectorCounter());
+        System.out.println("Integral computed: " + Spline.getIntegrationCallsCounter());
+        System.out.println("uAtDisp called: " + Spline.getuAtDispCounter());
+
         Road r = res.getValue1();
         int n = prof.getProfileSize();
         double disp = 0;
@@ -53,6 +60,11 @@ public class ConstraintTests {
         Road r = res.getValue1();
         int n = prof.getProfileSize();
         double disp = 0;
+
+        System.out.println("Points used: " + Point2d.getPointCounter());
+        System.out.println("Vectors used: " + Vector2d.getVectorCounter());
+        System.out.println("Integral computed: " + Spline.getIntegrationCallsCounter());
+        System.out.println("uAtDisp called: " + Spline.getuAtDispCounter());
 
         for(int i = 0; i < n - 1; i++){
             KinematicState ret1 = prof.getStateByIdx(i);
@@ -89,6 +101,11 @@ public class ConstraintTests {
         double maxv = constr.getMaxVel();
         double maxa = constr.getMaxAcc();
         double maxangv = constr.getMaxAngVel();
+
+        System.out.println("Points used: " + Point2d.getPointCounter());
+        System.out.println("Vectors used: " + Vector2d.getVectorCounter());
+        System.out.println("Integral computed: " + Spline.getIntegrationCallsCounter());
+        System.out.println("uAtDisp called: " + Spline.getuAtDispCounter());
 
         double maxTime = lut.getEndTime();
         for(int i = 0; i < 2000; i++){

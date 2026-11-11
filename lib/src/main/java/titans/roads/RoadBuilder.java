@@ -7,10 +7,10 @@ import titans.geometry.Line2d;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 import titans.math.Spline;
-import titans.util.Unimplemented;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * This class provides a way for users to build a {@link Road} in a simple manner.
@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
  * @see Spline
  * @see HeadingInterpolation
  */
+@ParametersAreNonnullByDefault
 public class RoadBuilder {
     private Point2d prevPoint = null;
     private Point2d startPoint;
@@ -160,7 +161,7 @@ public class RoadBuilder {
      * @param prev the startpoint of the previous segment
      * @return a new {@code Vector2d} object representing the end tangent vector of the spline
      */
-    @Nonnull private Vector2d tangentVector(double startTangent, @Nonnull Point2d start, @Nonnull Point2d end, @Nullable Point2d prev) {
+    @Nonnull private Vector2d tangentVector(double startTangent, Point2d start, Point2d end, @Nullable Point2d prev) {
         double r;
 
         double distCurr = Point2d.dist(start, end);
@@ -390,13 +391,6 @@ public class RoadBuilder {
         lastAngDeriv = endTangentHeading;
         road.addSegment(s, true, splineInterp);
 
-        return this;
-    }
-
-    // ???
-    @SuppressWarnings("unused")
-    @Unimplemented
-    public RoadBuilder splineAlter2ndDeriv(Point2d endPoint, double deriv2){
         return this;
     }
 

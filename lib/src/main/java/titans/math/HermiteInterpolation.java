@@ -5,7 +5,7 @@ import org.apache.commons.math3.util.FastMath;
 public class HermiteInterpolation {
     private double x0, x1;
     private double m0, m1;
-    private double coef3, coef2, coef1, coef0;
+    private final double coef3, coef2, coef1, coef0;
 
     public HermiteInterpolation(double x0, double x1, double m0, double m1) {
         coef3 = 2 * x0 - 2 * x1 + m0 + m1;

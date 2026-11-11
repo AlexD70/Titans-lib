@@ -2,26 +2,28 @@ package titans.geometry;
 
 import org.apache.commons.math3.util.FastMath;
 import org.javatuples.Pair;
-import titans.util.Useless;
+import org.jetbrains.annotations.Contract;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-//!TODO: FIXME
-// plenty of this class' functions crash or have undefined behaviour if it is not
-// built using 2 points.
-// fix: if built with slope, compute 2nd point automatically
-
-// a line in a 2d space
-// this is just a blob, with limited features
+/**
+ * This class represents a line in 2D space.
+ *
+ * @author AlexD70
+ */
 public class Line2d {
-    private double slope;
-    private Point2d a = new Point2d(), b = new Point2d(0, 1);
+    private final double slope;
+    private final Point2d a, b;
 
-//    private double nTerm;
-
-    public Line2d(){}
-    public Line2d(Point2d a, Point2d b){
+    /**
+     * Builds a new {@code Line2D} object. The ctor fails if the points are the same.
+     * @param a a point
+     * @param b another point
+     * @throws IllegalArgumentException if {@code a.equals(b)}
+     * @see Point2d#equals(Object)
+     */
+    public Line2d(@Nonnull Point2d a, @Nonnull Point2d b){
         if(a.equals(b)){
             throw new IllegalArgumentException(String.format("Line object cannot be created from identical points: %s, %s.", a.toString(), b.toString()));
         }
@@ -30,23 +32,27 @@ public class Line2d {
         this.b = b;
 
         slope = FastMath.atan2(b.y - a.y, b.x - a.x);
-//        nTerm = a.y - slope * a.x;
-    }
-    public Line2d(Point2d a, double m){
-        slope = m;
-        this.a = a;
-//        nTerm = a.y - m * b.x;
     }
 
+    /**
+     * Returns the point at a given internal parameter computed for the parametrization of the line.
+     * The line is automatically parameterized such that the first ctor argument is at u = 0 and the second
+     * is at u = 1: x(u) = ax + u * (bx - ax), y(u) = ay + u * (by - ay)
+     * @param u the internal parameter
+     * @return a {@code new Point2d}
+     */
+    @Nonnull @Contract(value = "_ -> new", pure = true)
     public Point2d pointAtParam(double u){
         return new Point2d((a.x + u * (b.x - a.x)), (a.y + u * (b.y - a.y)));
     }
 
-    public static double getSlope(Point2d a, Point2d b){
+    @Contract("_, _ -> _")
+    public static double getSlope(@Nonnull Point2d a, @Nonnull Point2d b){
         return (new Line2d(a, b)).slope;
     }
 
-    public static double getLineAngle(Point2d a, Point2d b){
+    @Contract("_, _ -> _")
+    public static double getLineAngle(@Nonnull Point2d a, @Nonnull Point2d b){
         return FastMath.atan2(a.getY() - b.getY(), a.getX() - b.getX());
     }
 
@@ -58,7 +64,7 @@ public class Line2d {
     //private Pair<Double, Double> cachedT = null;
     //private Circle2d tCachedFor = null;
     @Nullable
-    public Pair<Double, Double> intersect_Circle(Circle2d c){
+    public Pair<Double, Double> intersect_Circle(@Nonnull Circle2d c){
         double dx = b.x - a.x;
         double dy = b.y - a.y;
 
@@ -118,7 +124,6 @@ public class Line2d {
         return new Pair<>(t1, t2);
     }
 
-    @Useless
     public double getSlope(){
         return slope;
     }

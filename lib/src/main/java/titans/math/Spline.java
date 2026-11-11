@@ -14,6 +14,7 @@ import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
 import org.apache.commons.math3.util.FastMath;
 
+import org.jetbrains.annotations.Contract;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 
@@ -24,6 +25,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import titans.math.MathUtils;
+
+import java.util.HashMap;
 
 /**
  * A class representing splines which are a type of parametric curves
@@ -159,7 +162,7 @@ public class Spline implements ParametricCurve {
     // GETTERS ===========================================
 
     @Override
-    @Nonnull
+    @Nonnull @Contract(value = "-> _", pure = true)
     public Point2d getStartPoint(){
         if (isNull) {
             throw new NullSplineErr(this);
@@ -168,7 +171,7 @@ public class Spline implements ParametricCurve {
     }
 
     @Override
-    @Nonnull
+    @Nonnull @Contract(value = "-> _", pure = true)
     public Point2d getEndPoint(){
         if (isNull) {
             throw new NullSplineErr(this);
@@ -181,7 +184,7 @@ public class Spline implements ParametricCurve {
         return length;
     }
 
-    @Nonnull
+    @Nonnull @Contract(value = "-> new", pure = true)
     public Double[] getXCoeffs(){
         if (isNull) {
             throw new NullSplineErr(this);
@@ -189,7 +192,7 @@ public class Spline implements ParametricCurve {
         return xpoly.getCoefficients();
     }
 
-    @Nonnull
+    @Nonnull @Contract(value = "-> new", pure = true)
     public Double[] getYCoeffs(){
         if (isNull) {
             throw new NullSplineErr(this);
@@ -206,7 +209,7 @@ public class Spline implements ParametricCurve {
      * @return a new {@code Point2d} object
      * @throws NullSplineErr
      */
-    @Override @Nonnull
+    @Override @Nonnull @Contract(value = "_ -> new", pure = true)
     public Point2d pointAt(double u){
         if(isNull) {
             throw new NullSplineErr(this);
@@ -219,6 +222,8 @@ public class Spline implements ParametricCurve {
 
         return new Point2d(xpoly.apply(u), ypoly.apply(u));
     }
+
+    private static long integrationCallsCounter = 0;
 
     /**
      * Integrates the position vector over (0, u) to get the distance travelled.
@@ -238,6 +243,7 @@ public class Spline implements ParametricCurve {
             return length;
         }
 
+        integrationCallsCounter += 1;
         SimpsonIntegrator integrator = new SimpsonIntegrator();
         try {
             return integrator.integrate(
@@ -264,8 +270,12 @@ public class Spline implements ParametricCurve {
         return 0;
     }
 
+    public static long getIntegrationCallsCounter(){
+        return integrationCallsCounter;
+    }
+
     @Override
-    @Nonnull
+    @Nonnull @Contract(value = "_ -> new", pure = true)
     public Point2d derivAt(double u) {
         if(isNull){
             throw new NullSplineErr(this);
@@ -274,7 +284,7 @@ public class Spline implements ParametricCurve {
     }
 
     @Override
-    @Nonnull
+    @Nonnull @Contract(value = "_ -> new", pure = true)
     public Point2d deriv2ndAt(double u){
         if(isNull){
             throw new NullSplineErr(this);
@@ -327,6 +337,7 @@ public class Spline implements ParametricCurve {
      * @throws NullSplineErr see class description
      * @throws DispOfBoundsException if displacement is negative or greater than {@code length}
      */
+    private static long uAtDispCounter = 0;
     @Override
     public double uAtDisp(double d){
         if(isNull){
@@ -335,6 +346,7 @@ public class Spline implements ParametricCurve {
         if(length != -1 && !MathUtils.dispInRange(d, 0, length)){
             throw new DispOfBoundsException(d, 0, length, this);
         }
+        uAtDispCounter += 1;
 
         var fx = new UnivariateFunction() {
             @Override
@@ -360,13 +372,16 @@ public class Spline implements ParametricCurve {
         initialGuessCache = res.getPoint();
         return initialGuessCache;
     }
+    public static long getuAtDispCounter(){
+        return uAtDispCounter;
+    }
 
     /**
      * @throws NullSplineErr see class description
      * @throws DispOfBoundsException see {@link #uAtDisp(double)}
      */
     @Override
-    @Nonnull
+    @Nonnull @Contract(value = "_ -> new", pure = true)
     public Point2d pointAtDisp(double d){
         if(isNull){
             throw new NullSplineErr(this);

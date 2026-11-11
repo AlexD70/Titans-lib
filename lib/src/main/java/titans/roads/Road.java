@@ -2,6 +2,7 @@ package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
+import org.jetbrains.annotations.Contract;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 import titans.math.MathUtils;
@@ -62,7 +63,7 @@ public class Road {
      * @param continuous a boolean showing if path continuity is broken or not
      * @throws RuntimeException if segment count exceeds {@code MAX_SEGMENTS}
      */
-    public void addSegment(ParametricCurve s, boolean continuous){
+    public void addSegment(@Nonnull ParametricCurve s, boolean continuous){
         if(n == MAX_SEGMENTS){
             throw new RuntimeException("Max segment count exceeded for path!");
         }
@@ -83,7 +84,7 @@ public class Road {
      * @param interp a heading interpolation object
      * @throws RuntimeException if segment count exceeds {@code MAX_SEGMENTS}
      */
-    public void addSegment(ParametricCurve s, boolean continuous, HeadingInterpolation interp) {
+    public void addSegment(@Nonnull ParametricCurve s, boolean continuous, @Nonnull HeadingInterpolation interp) {
         if(n == MAX_SEGMENTS){
             throw new RuntimeException("Max segment count exceeded for path!");
         }
@@ -96,7 +97,7 @@ public class Road {
         n += 1;
     }
 
-    public HeadingInterpolation getHeadingInterpByIndex(int idx){
+    public @Nonnull HeadingInterpolation getHeadingInterpByIndex(int idx){
         return headingInterp.get(idx);
     }
 
@@ -123,7 +124,8 @@ public class Road {
      * @return a {@code Pair<Spline, Double>} containing the segment as a {@code Spline} and the relative displacement on that segment
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Pair<ParametricCurve, Double> getSegment2Disp(double d){
+    @Contract(value = "_ -> _", pure = true)
+    public @Nonnull Pair<ParametricCurve, Double> getSegment2Disp(double d){
         if(!MathUtils.dispInRange(d, 0, totalLength)){
             throw new DispOfBoundsException(d, 0, totalLength, this);
         }
@@ -139,7 +141,8 @@ public class Road {
      * the relative displacement on that segment
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Triplet<ParametricCurve, Integer, Double> getSegment3Disp(double d){
+    @Contract(value = "_ -> _", pure = true)
+    public @Nonnull Triplet<ParametricCurve, Integer, Double> getSegment3Disp(double d){
         if(!MathUtils.dispInRange(d, 0, totalLength)){
             throw new DispOfBoundsException(d, 0, totalLength, this);
         }
@@ -155,7 +158,8 @@ public class Road {
      * and a boolean indicating if the road is continuous in the vicinity of the given point
      * @throws RuntimeException if the displacement is out of road bounds
      */
-    public Triplet<ParametricCurve, Double, Boolean> getSegmentCont3Disp(double d){
+    @Contract(value = "_ -> _", pure = true)
+    public @Nonnull Triplet<ParametricCurve, Double, Boolean> getSegmentCont3Disp(double d){
         if(!MathUtils.dispInRange(d, 0, totalLength)){
             throw new DispOfBoundsException(d, 0, totalLength, this);
         }
@@ -171,6 +175,7 @@ public class Road {
      * @return the segment index
      * @throws RuntimeException if the displacement is out of road bounds
      */
+    @Contract(pure = true)
     public int getSegment1Disp(double d){
         if(!MathUtils.dispInRange(d, 0, totalLength)){
             throw new DispOfBoundsException(d, 0, totalLength, this);
@@ -180,13 +185,12 @@ public class Road {
         return index;
     }
 
-    public Point2d pointAtDisp(double d){
+    @Contract(value = "_ -> new", pure = true)
+    public @Nonnull Point2d pointAtDisp(double d){
         Pair<ParametricCurve, Double> output = getSegment2Disp(d);
         return output.getFirst().pointAtDisp(output.getSecond());
     }
 
-
-    @Useless
     public double slopeAtDisp(double d){
         Pair<ParametricCurve, Double> output = getSegment2Disp(d);
         ParametricCurve s = output.getFirst();
@@ -200,10 +204,11 @@ public class Road {
      * @param d displacement in cm
      * @return a new {@code @Nullable Point2d} object
      */
+    @Contract(pure = true)
     public @Nullable Point2d getDerivAtDisp(double d){
         Triplet<ParametricCurve, Double, Boolean> segment = this.getSegmentCont3Disp(d);
         ParametricCurve s = segment.getValue0();
-        if(! segment.getValue2()){ // segment breaks continuity
+        if(!segment.getValue2()){ // segment breaks continuity
             return null;
         }
         return s.derivAt(s.uAtDisp(segment.getValue1()));
@@ -215,6 +220,7 @@ public class Road {
      * @param d displacement in cm
      * @return a new {@code @Nonnull Point2d} object
      */
+    @Contract(pure = true)
     public @Nonnull Point2d getDerivAtDispNonnull(double d){
         Triplet<ParametricCurve, Double, Boolean> segment = this.getSegmentCont3Disp(d);
         ParametricCurve s = segment.getValue0();
@@ -228,6 +234,7 @@ public class Road {
      * @param d displacement in cm
      * @return the curvature as a {@code Double}
      */
+    @Contract(pure = true)
     public @Nullable Double getCurvatureAtDisp(double d){
         Pair<ParametricCurve, Double> output = getSegment2Disp(d);
         ParametricCurve s = output.getFirst();
@@ -259,7 +266,7 @@ public class Road {
         return n;
     }
 
-    public ParametricCurve getSegmentByIndex(int idx){
+    public @Nonnull ParametricCurve getSegmentByIndex(int idx){
         return segments.get(idx);
     }
 

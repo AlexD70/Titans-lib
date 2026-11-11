@@ -2,6 +2,9 @@ package titans.geometry;
 
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.MathUtils;
+import org.jetbrains.annotations.Contract;
+
+import javax.annotation.Nonnull;
 
 /**
  * A class for representing vectors in a 2d space.
@@ -19,6 +22,7 @@ public class Vector2d {
     private double x, y;
     private double r, t;
     private boolean isPolar = true;
+    private static long vectorCounter = 0;
 
     /**
      * Builds a vector with both cartesian and polar representation.
@@ -27,6 +31,8 @@ public class Vector2d {
         this.x = x;
         this.y = y;
         this.toPolar();
+
+        vectorCounter += 1;
     }
 
     /**
@@ -42,6 +48,13 @@ public class Vector2d {
         }
 
         this.isPolar =  !noPolar;
+
+        vectorCounter += 1;
+    }
+
+    @Nonnull
+    public Vector2d copy(){
+        return new Vector2d(x, y);
     }
 
     /**
@@ -50,6 +63,7 @@ public class Vector2d {
      * @param t the angle (in radians)
      * @return a new {@code Vector2d} object with both scalar and polar representations
      */
+    @Nonnull @Contract("_, _ -> new")
     public static Vector2d fromPolar(double r, double t){
         t = MathUtils.normalizeAngle(t, 0d);
         Vector2d ret = new Vector2d(FastMath.cos(t) * r, FastMath.sin(t) * r);
@@ -63,6 +77,7 @@ public class Vector2d {
      * Provides a way to use polar representation with a vector.
      * The user doesn't need to directly call this unless the vector was initialized with {@code noPolar = true}.
      */
+    @Contract(pure = false)
     public void toPolar(){
         r = FastMath.sqrt(FastMath.pow(x, 2) + FastMath.pow(y, 2));
         t = MathUtils.normalizeAngle(FastMath.atan2(y, x), 0d);
@@ -74,6 +89,7 @@ public class Vector2d {
      * @param deltaTheta the angle in radians
      * @return the object itself
      */
+    @Contract(value = "_ -> this", pure = false) @Nonnull
     public Vector2d rotate(double deltaTheta){
         this.toPolar();
         this.t += deltaTheta;
@@ -84,7 +100,7 @@ public class Vector2d {
         return this;
     }
 
-    public double dot(Vector2d other){
+    public double dot(@Nonnull Vector2d other){
         return this.x * other.x + this.y * other.y;
     }
 
@@ -131,10 +147,11 @@ public class Vector2d {
      * through a single double value.
      *
      */
-    public double cross(Vector2d other){
+    public double cross(@Nonnull Vector2d other){
         return this.x * other.y - this.y * other.x;
     }
 
+    @Contract("-> new")
     public Point2d toPoint(){
         return new Point2d(x, y);
     }
@@ -144,6 +161,7 @@ public class Vector2d {
      *
      * @return the object itself
      */
+    @Contract(value = "_ -> this", pure = false) @Nonnull
     public Vector2d mlt(double scalar){
         this.x *= scalar;
         this.y *= scalar;
@@ -176,6 +194,7 @@ public class Vector2d {
      * A vector with 0 absolute value is simply returned.
      * @return the object itself
      */
+    @Contract(value="-> this", pure = false) @Nonnull
     public Vector2d norm() {
         double abs = this.abs();
 
@@ -190,7 +209,8 @@ public class Vector2d {
      * @param other a {@code Vector2d}
      * @return a new {@code Vector2d} representing the difference
      */
-    public Vector2d diff(Vector2d other){
+    @Contract(value = "_ -> new", pure = true) @Nonnull
+    public Vector2d diff(@Nonnull Vector2d other){
         return new Vector2d(this.x - other.x, this.y - other.y);
     }
 
@@ -198,7 +218,8 @@ public class Vector2d {
      * @param other a {@code Vector2d}
      * @return a new {@code Vector2d} representing the sum
      */
-    public Vector2d add(Vector2d other){
+    @Contract(value = "_ -> new", pure = true) @Nonnull
+    public Vector2d add(@Nonnull Vector2d other){
         return new Vector2d(this.x + other.x, this.y + other.y);
     }
 
@@ -209,5 +230,9 @@ public class Vector2d {
         } else {
             return super.toString() + String.format("(%f, %f)", x, y);
         }
+    }
+
+    public static long getVectorCounter(){
+        return vectorCounter;
     }
 }

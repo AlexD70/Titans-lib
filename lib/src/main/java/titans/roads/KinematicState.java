@@ -6,6 +6,8 @@ import titans.geometry.Point2d;
 import titans.geometry.Pose;
 import titans.geometry.Vector2d;
 
+import javax.annotation.Nonnull;
+
 /**
  * Immutable container class for kinematic states. Stores the robot {@code Pose}, meaning its 2D position and
  * orientation, its velocity and acceleration on both the x-axis and the y-axis, the time and the robot's angular
@@ -27,7 +29,7 @@ public class KinematicState {
      * @param vel velocity on both x and y axes
      * @param acc acceleration on both x and y axes
      */
-    public KinematicState(Point2d pos, Vector2d vel, Vector2d acc){
+    public KinematicState(@Nonnull Point2d pos, @Nonnull Vector2d vel, @Nonnull Vector2d acc){
         position = new Pose(pos, 0);
         velocity = vel;
         acceleration = acc;
@@ -43,7 +45,7 @@ public class KinematicState {
      * @param vel velocity on both x and y axes
      * @param acc acceleration on both x and y axes
      */
-    public KinematicState(double t, Point2d pos, Vector2d vel, Vector2d acc){
+    public KinematicState(double t, @Nonnull Point2d pos, @Nonnull Vector2d vel, @Nonnull Vector2d acc){
         position = new Pose(pos, 0);
         velocity = vel;
         acceleration = acc;
@@ -61,7 +63,7 @@ public class KinematicState {
      * @param omega angular velocity
      * @param epsilon angular acceleration
      */
-    public KinematicState(double t, Pose pos, Vector2d vel, Vector2d acc, double omega, double epsilon){
+    public KinematicState(double t, @Nonnull Pose pos, @Nonnull Vector2d vel, @Nonnull Vector2d acc, double omega, double epsilon){
         position = pos;
         velocity = vel;
         acceleration = acc;
@@ -74,19 +76,19 @@ public class KinematicState {
         return time;
     }
 
-    public Pose getPos(){
+    public @Nonnull Pose getPos(){
         return position;
     }
 
-    public Vector2d getVel(){
-        return velocity;
+    public @Nonnull Vector2d getVel(){
+        return velocity.copy();
     }
 
-    public Vector2d getAcc(){
-        return acceleration;
+    public @Nonnull Vector2d getAcc(){
+        return acceleration.copy();
     }
 
-    public static KinematicState getLinearInterpolation(KinematicState first, KinematicState second, double actualTime){
+    public static @Nonnull KinematicState getLinearInterpolation(@Nonnull KinematicState first, @Nonnull KinematicState second, double actualTime){
         double interpolationFactor = (actualTime - first.getTime()) / (second.getTime() - first.getTime());
         if(interpolationFactor < 0){
             interpolationFactor = 0;

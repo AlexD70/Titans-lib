@@ -1,6 +1,7 @@
 package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
+import org.jetbrains.annotations.Contract;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 
@@ -11,18 +12,18 @@ public class HolonomicKinematics implements RobotKinematics {
     private double xWheelOffset = 0, yWheelOffset = 0;
     private ConstraintSet constraints;
 
-    public HolonomicKinematics(ConstraintSet constr){
+    public HolonomicKinematics(@Nonnull ConstraintSet constr){
         constraints = constr;
     }
 
-    public HolonomicKinematics(double x, double y, ConstraintSet constr){
+    public HolonomicKinematics(double x, double y, @Nonnull ConstraintSet constr){
         xWheelOffset = x;
         yWheelOffset = y;
         constraints = constr;
     }
 
-    @Override
-    public double getVelocityLimit(double displacement, Road road, @Nullable Vector2d prevTan, int lastSegment) {
+    @Override @Contract(value = "_, _, null, _ -> _; _, _, _, _ -> _", pure = true)
+    public double getVelocityLimit(double displacement, @Nonnull Road road, @Nullable Vector2d prevTan, int lastSegment) {
         double plannedVel = maxVel();
         Double curvature = road.getCurvatureAtDisp(displacement);
         if(curvature == null){
@@ -57,7 +58,7 @@ public class HolonomicKinematics implements RobotKinematics {
         return FastMath.min(plannedVel, maxCentripetalVel);
     }
 
-    @Override
+    @Override @Contract(value = "_, null -> _; _, _ -> _", pure = true)
     public double getLinearAcceleration(double currentVel, @Nullable Double curvature) {
         double centripetalAcc = 0;
         if (curvature != null) {
@@ -72,6 +73,7 @@ public class HolonomicKinematics implements RobotKinematics {
         return availableLinearAcc;
     }
 
+    @Contract(pure = false)
     public void setWheelOffsets(double x, double y){
         xWheelOffset = x;
         yWheelOffset = y;

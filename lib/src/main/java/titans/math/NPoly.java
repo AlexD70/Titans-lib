@@ -1,5 +1,7 @@
 package titans.math;
 
+import org.jetbrains.annotations.Contract;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,7 +64,7 @@ public class NPoly {
      * @return a new {@code NPoly} object
      * @throws IndexOutOfBoundsException if the object's coefficients weren't assigned beforehand
      */
-    @Nonnull
+    @Nonnull @Contract(value = "-> new", pure = true)
     public NPoly getDerivative() throws IndexOutOfBoundsException {
         NPoly deriv = new NPoly(n - 1);
 
@@ -73,7 +75,7 @@ public class NPoly {
         return deriv;
     }
 
-    @Nonnull
+    @Nonnull @Contract(value = "-> new", pure = true)
     public Double[] getCoefficients(){
         return coefficients.toArray(new Double[6]);
     }
@@ -83,7 +85,7 @@ public class NPoly {
      * @return a new {@code NPoly} object
      * @throws IndexOutOfBoundsException if the object's coefficients weren't assigned beforehand
      */
-    @Nonnull
+    @Nonnull @Contract(value = "-> new", pure = true)
     public NPoly getSecondDerivative() throws IndexOutOfBoundsException {
         return getDerivative().getDerivative();
     }

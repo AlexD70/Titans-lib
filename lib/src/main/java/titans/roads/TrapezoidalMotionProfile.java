@@ -5,7 +5,9 @@ import org.javatuples.Pair;
 import titans.geometry.Point2d;
 import titans.geometry.Vector2d;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.function.BiFunction;
 
 /**
  * This class represents a trapezoidal motion profile that plans velocity and acceleration for a {@link Road}.
@@ -40,7 +42,7 @@ public class TrapezoidalMotionProfile {
      * @param kin the Kinematics object
      * @param r the {@code Road} to build the profile for
      */
-    protected TrapezoidalMotionProfile(int resolution, HolonomicKinematics kin, Road r){
+    protected TrapezoidalMotionProfile(int resolution, @Nonnull HolonomicKinematics kin, Road r){
         if(resolution <= 2){
             throw new RuntimeException("Resolution is too low to build a motion profile");
         }
@@ -64,7 +66,7 @@ public class TrapezoidalMotionProfile {
      * @param yWheelOffset robot wheel offset on y-axis
      * @param resolution profile resolution. Should be at least 3
      */
-    public TrapezoidalMotionProfile(Road road, ConstraintSet constraints, double initVel, double endVel, double initAcc, double xWheelOffset, double yWheelOffset, int resolution){
+    public TrapezoidalMotionProfile(@Nonnull Road road, @Nonnull ConstraintSet constraints, double initVel, double endVel, double initAcc, double xWheelOffset, double yWheelOffset, int resolution){
         this(resolution, new HolonomicKinematics(xWheelOffset, yWheelOffset, constraints), road);
         ArrayList<Pair<Double, Double>> dispProfile = new ArrayList<>(resolution + 1);
 
@@ -110,7 +112,7 @@ public class TrapezoidalMotionProfile {
      * @param ay acceleration on y-axis
      * @see KinematicState
      */
-    private void addToProfile(double time, Point2d xy, double vx, double vy, double ax, double ay){
+    private void addToProfile(double time, @Nonnull Point2d xy, double vx, double vy, double ax, double ay){
         timeProfile.add(new KinematicState(
                 time, xy, new Vector2d(vx, vy), new Vector2d(ax, ay)
         ));
@@ -128,7 +130,7 @@ public class TrapezoidalMotionProfile {
      * @return the number of states in the sampled profile
      * @throws RuntimeException if the curvature is {@code null} at any point
      */
-    private int sampleDisplacementProfile(ArrayList<Pair<Double, Double>> dispProfile, double initVel, double initAcc, double endVel){
+    private int sampleDisplacementProfile(@Nonnull ArrayList<Pair<Double, Double>> dispProfile, double initVel, double initAcc, double endVel){
         double[] linspaceDisplacement = linearSpace(0, road.getLength(), this.resolution);
 
         int lastSgm = 0;
@@ -161,14 +163,23 @@ public class TrapezoidalMotionProfile {
         return linspaceDisplacement.length - 1;
     }
 
+    private double rungeKutta4(double step, double tn, @Nonnull BiFunction<Double, Double, Double> f, double yn){
+        double k1 = f.apply(tn, yn);
+        double k2 = f.apply(tn + step/2, yn + k1 * step/2);
+        double k3 = f.apply(tn + step/2, yn + k2 * step/2);
+        double k4 = f.apply(tn + step, yn + step * k3);
+
+        return yn + step/6d * (k1 + 2 * k2 + 2 * k3 + k4);
+    }
+
     /**
      * Passes forward through the displacement profile {@code this.dispProfile} to ensure the robot
      * can achieve the desired speed with respect to its maximum acceleration.
      * @param dispProfile the profile to pass through
      * @param n the number of kinematic states in the displacement profile
      */
-    private void forwardPass(ArrayList<Pair<Double, Double>> dispProfile, int n){
-        for (int j = 1; j < n; j ++){
+    private void forwardPass(@Nonnull ArrayList<Pair<Double, Double>> dispProfile, int n){
+        for (int j = 1; j <= n; j ++){
             Pair<Double, Double> current = dispProfile.get(j);
             Pair<Double, Double> prev = dispProfile.get(j - 1);
 
@@ -180,7 +191,11 @@ public class TrapezoidalMotionProfile {
                 double accGuess = kin.getLinearAcceleration(prevVel, road.getCurvatureAtDisp(d1));
                 double velGuess = FastMath.sqrt(prevVel * prevVel + 2 * deltaDisp * accGuess);
                 velGuess = FastMath.min(velGuess, currentVel);
-                double availableLinearAcc = kin.getLinearAcceleration(currentVel, road.getCurvatureAtDisp(d1));
+                double availableLinearAcc = kin.getLinearAcceleration(velGuess, road.getCurvatureAtDisp(d1));
+
+                /*double maxVelRK4 = rungeKutta4(deltaDisp, d1,
+                        (d, v) -> 2 * kin.getLinearAcceleration(v, road.getCurvatureAtDisp(d)), prevVel
+                );*/
 
                 double maxVel = FastMath.sqrt(FastMath.pow(prevVel, 2) + 2 * deltaDisp * availableLinearAcc);
                 dispProfile.set(j, new Pair<>(d1, FastMath.min(maxVel, currentVel)));
@@ -194,9 +209,9 @@ public class TrapezoidalMotionProfile {
      * @param dispProfile the profile to pass through
      * @param n the number of kinematic states in the displacement profile
      */
-    private void backwardsPass(ArrayList<Pair<Double, Double>> dispProfile, int n){
+    private void backwardsPass(@Nonnull ArrayList<Pair<Double, Double>> dispProfile, int n){
         // backwards pass
-        for (int j = n - 1; j > 0; j--){
+        for (int j = n; j > 0; j--){
             Pair<Double, Double> current = dispProfile.get(j);
             Pair<Double, Double> next = dispProfile.get(j - 1);
 
@@ -208,7 +223,11 @@ public class TrapezoidalMotionProfile {
                 double accGuess = kin.getLinearAcceleration(currentVel, road.getCurvatureAtDisp(d2));
                 double velGuess = FastMath.sqrt(FastMath.pow(currentVel, 2) + 2 * deltaDisp * accGuess);
                 velGuess = FastMath.min(velGuess, nextVel);
-                double availableLinearAcc = kin.getLinearAcceleration(nextVel, road.getCurvatureAtDisp(d2));
+                double availableLinearAcc = kin.getLinearAcceleration(velGuess, road.getCurvatureAtDisp(d2));
+
+                /*double maxVelRK4 = rungeKutta4(deltaDisp, d2,
+                        (d, v) -> 2 * kin.getLinearAcceleration(v, road.getCurvatureAtDisp(d)), currentVel
+                );*/
 
                 double maxVel = FastMath.sqrt(FastMath.pow(currentVel, 2) + 2 * deltaDisp * availableLinearAcc);
                 dispProfile.set(j - 1, new Pair<>(d2, FastMath.min(maxVel, nextVel)));
@@ -224,12 +243,11 @@ public class TrapezoidalMotionProfile {
      * @param initAcc initial acceleration
      * @return the total time of the profile
      */
-    private double turnToTimeProfile(ArrayList<Pair<Double, Double>> dispProfile, int n, double initVel, double initAcc){
+    private double turnToTimeProfile(@Nonnull ArrayList<Pair<Double, Double>> dispProfile, int n, double initVel, double initAcc){
         // turn to time based profile
         this.timeProfile.ensureCapacity(n);
 
-        Vector2d tanVec = road.getDerivAtDispNonnull(0).toVector();
-        tanVec.norm();
+        Vector2d tanVec = road.getDerivAtDispNonnull(0).toVector().norm();
 
         this.addToProfile(
                 0d,
@@ -243,7 +261,7 @@ public class TrapezoidalMotionProfile {
 
         double lastTime = 0, time = 0;
         double lastVel, currentVel;
-        for (int j = 1; j < n; j ++){
+        for (int j = 1; j <= n; j ++){
             Pair<Double, Double> current = dispProfile.get(j), last = dispProfile.get(j - 1);
 
             currentVel = current.getValue1();
@@ -259,17 +277,31 @@ public class TrapezoidalMotionProfile {
 
             time += dt;
 
-            tanVec = road.getDerivAtDispNonnull(current.getValue0()).toVector();
-            tanVec.norm(); // normalize the vector
+            tanVec = road.getDerivAtDispNonnull(current.getValue0()).toVector().norm(); // normalize the vector
 
             double vx = currentVel * tanVec.getX(), vy = currentVel * tanVec.getY();
 
-            double accel = (currentVel - lastVel) / dt;
+            //double accel = (currentVel - lastVel) / dt;
             Double curv = road.getCurvatureAtDisp(current.getValue0());
             double centripetalAccel = 0;
             if (curv != null) {
                 centripetalAccel = FastMath.pow(currentVel, 2) * curv;
             }
+
+            // a = dv/dt = d(v^2)/(2*ds)
+            double accel = 0;
+            if (j < n) {
+                Pair<Double, Double> next = dispProfile.get(j + 1);
+                double ds_central = next.getValue0() - last.getValue0();
+                double dv2_central = FastMath.pow(next.getValue1(), 2) - FastMath.pow(lastVel, 2);
+                accel = dv2_central / (2.0 * ds_central);
+            } else {
+                // Fallback backward difference for the very last point
+                accel = (FastMath.pow(currentVel, 2) - FastMath.pow(lastVel, 2)) / (2.0 * ds);
+            }
+
+            double maxAccTan = kin.getLinearAcceleration(currentVel, curv);
+            accel = FastMath.max(-maxAccTan, FastMath.min(accel, maxAccTan));
 
             // Tangential component
             double ax = accel * tanVec.getX();
@@ -296,7 +328,7 @@ public class TrapezoidalMotionProfile {
         return timeProfile.size();
     }
 
-    public KinematicState getStateByIdx(int index){
+    public @Nonnull KinematicState getStateByIdx(int index){
         return timeProfile.get(index);
     }
 

@@ -1,6 +1,7 @@
 package titans.roads;
 
 import org.apache.commons.math3.util.FastMath;
+import org.jetbrains.annotations.Contract;
 
 /**
  * A lookup table for motion profiles that linearly interpolates between kinematic states.
